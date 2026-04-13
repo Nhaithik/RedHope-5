@@ -134,12 +134,12 @@ function sendChat(){
 
   DB.set('messages', msgs);
 
-  // ✅ EMAIL NOTIFICATION (NEW PART)
+  // ✅ EMAIL NOTIFICATION
   const users = DB.get('users') || [];
   const receiver = users.find(u => u.id === activePid);
 
   if(receiver && receiver.email){
-    emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", {
+    emailjs.send("service_te6r54b", "template_xzukcuk", {
       to_email: receiver.email,
       message: `💬 New message from ${user.email.split('@')[0]}:\n\n"${txt}"`
     })
@@ -147,7 +147,6 @@ function sendChat(){
     .catch(err => console.log("❌ Email failed", err));
   }
 
-  // Reset input + reload chat
   document.getElementById('chat-txt').value = '';
   openChat(activePid);
 }
