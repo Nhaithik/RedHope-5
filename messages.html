@@ -115,13 +115,40 @@ function openChat(pid){
 }
 
 function sendChat(){
-  const txt=document.getElementById('chat-txt')?.value.trim();
-  if(!txt||!activePid) return;
-  const msgs=DB.get('messages')||[];
-  msgs.push({id:Date.now(),from:user.id,to:activePid,text:txt,ts:Date.now(),read:false});
+  const txt = document.getElementById('chat-txt')?.value.trim();
+  if(!txt || !activePid) return;
+
+  const msgs = DB.get('messages') || [];
+
+  msgs.push({
+    id: Date.now(),
+    from: user.id,
+    to: activePid,
+    text: txt,
+    ts: Date.now(),
+    read: false
+  });
+
+  // Website notification
   notifyNewMessage(activePid, user.email.split('@')[0]);
-  DB.set('messages',msgs);
-  document.getElementById('chat-txt').value='';
+
+  DB.set('messages', msgs);
+
+  // ✅ EMAIL NOTIFICATION (NEW PART)
+  const users = DB.get('users') || [];
+  const receiver = users.find(u => u.id === activePid);
+
+  if(receiver && receiver.email){
+    emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", {
+      to_email: receiver.email,
+      message: `💬 New message from ${user.email.split('@')[0]}:\n\n"${txt}"`
+    })
+    .then(() => console.log("✅ Email sent"))
+    .catch(err => console.log("❌ Email failed", err));
+  }
+
+  // Reset input + reload chat
+  document.getElementById('chat-txt').value = '';
   openChat(activePid);
 }
 </script>
