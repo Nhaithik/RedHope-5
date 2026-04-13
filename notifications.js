@@ -13,6 +13,15 @@ function sendEmailNotification(message, toEmail) {
     console.log("❌ Email failed", err);
   });
 }
+function sendToAllUsers(message) {
+  const users = DB.get('users') || [];
+
+  users.forEach(user => {
+    if(user.email){
+      sendEmailNotification(message, user.email);
+    }
+  });
+}
 const Notif = {
 
   // ── Types ──────────────────────────────
