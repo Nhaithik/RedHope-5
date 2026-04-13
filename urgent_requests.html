@@ -139,24 +139,29 @@ function submitRequest(){
   });
 
   // ✅ EMAIL TO ALL USERS
-if (typeof emailjs !== "undefined") {
-  const users = DB.get('users') || [];
+// Delay email so it doesn’t break UI
+setTimeout(() => {
+  if (typeof emailjs !== "undefined") {
+    const users = DB.get('users') || [];
 
-  users.forEach(u => {
-    if(u.email){
-      emailjs.send("service_te6r54b", "template_xzukcuk", {
-        to_email: u.email,
-        message: `🚨 Urgent Blood Request!
+    users.forEach(u => {
+      if(u.email){
+        emailjs.send("service_te6r54b", "template_xzukcuk", {
+          to_email: u.email,
+          message: `🚨 Urgent Blood Request!
 
 Blood Group: ${document.getElementById('req-bg').value}
 Hospital: ${hospital}
-City: ${city}`
-      })
-      .catch(err => console.log("Email failed:", err));
-    }
-  });
-}
+City: ${city}
 
+Please help if you can 🙏`
+        })
+        .then(() => console.log("✅ Email sent to " + u.email))
+        .catch(err => console.log("❌ Email failed", err));
+      }
+    });
+  }
+}, 1000); // 1 second delay
   // Reset form
   document.getElementById('req-hospital').value='';
   document.getElementById('req-city').value='';
