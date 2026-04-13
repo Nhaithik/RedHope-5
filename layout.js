@@ -1,3 +1,11 @@
+// Load EmailJS
+const script = document.createElement("script");
+script.src = "https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js";
+document.head.appendChild(script);
+
+script.onload = () => {
+  emailjs.init("YOUR_PUBLIC_KEY");
+};
 // Renders sidebar + topbar into the page
 function renderLayout(pageTitle, activePage) {
   const user = requireAuth();
