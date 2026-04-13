@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Urgent Requests | Red Hope</title>
+<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+<script src="shared.js"></script>
+<script src="notifications.js"></script>
+<script src="layout.js"></script>
+<script>const user = renderLayout('Urgent Requests', 'urgent_requests.html');</script>
+
+<div id="page-body" style="display:none;">
+  <div class="top-header">
+    <div>
+      <h1><i class="fa-solid fa-triangle-exclamation" style="color:var(--red);"></i> Urgent Requests</h1>
+      <p>Critical blood needs from our community.</p>
+    </div>
+    <button class="btn-sm" style="background:var(--red);color:white;padding:10px 18px;" onclick="openModal('new-req-modal')">
+      <i class="fa-solid fa-plus"></i> Post Request
+    </button>
+  </div>
+  <div style="display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap;">
+    <span style="display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:500;"><span style="width:10px;height:10px;background:#DC2626;border-radius:50%;display:inline-block;"></span>Critical</span>
+    <span style="display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:500;"><span style="width:10px;height:10px;background:#D97706;border-radius:50%;display:inline-block;"></span>High</span>
+    <span style="display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:500;"><span style="width:10px;height:10px;background:#CA8A04;border-radius:50%;display:inline-block;"></span>Moderate</span>
+  </div>
+  <div class="req-grid" id="req-grid"></div>
+</div>
+
+<!-- New Request Modal -->
+<div class="modal-overlay" id="new-req-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('new-req-modal')">×</button>
+    <h3 style="font-family:'Playfair Display',serif;color:var(--red);margin-bottom:5px;"><i class="fa-solid fa-triangle-exclamation"></i> Post Urgent Request</h3>
+    <p style="color:var(--muted);font-size:.88rem;margin-bottom:20px;">This will be broadcast to all active donors. Use only for genuine urgent needs.</p>
+    <div class="form-row">
+      <div class="form-group"><label>Blood Group *</label>
+        <select id="req-bg"><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
+      </div>
+      <div class="form-group"><label>Urgency Level *</label>
+        <select id="req-urgency"><option value="critical">🔴 Critical</option><option value="high" selected>🟠 High</option><option value="moderate">🟡 Moderate</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label>Hospital / Location *</label><input type="text" id="req-hospital" placeholder="e.g. City Medical Center"/></div>
+    <div class="form-group"><label>City *</label><input type="text" id="req-city" placeholder="e.g. Mumbai"/></div>
+    <div class="form-group"><label>Additional Details</label><input type="text" id="req-desc" placeholder="Any additional information for donors..."/></div>
+    <button class="btn-primary" onclick="submitRequest()"><i class="fa-solid fa-paper-plane"></i> Broadcast Request</button>
+  </div>
+</div>
+
+<!-- Message Modal -->
+<div class="modal-overlay" id="msg-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('msg-modal')">×</button>
+    <h3 style="font-family:'Playfair Display',serif;margin-bottom:16px;">Message <span id="msg-to-name" style="color:var(--red);"></span></h3>
+    <div class="form-group"><label>Your Message</label><textarea id="msg-text" style="height:80px;resize:vertical;" placeholder="I can help with this request..."></textarea></div>
+    <button class="btn-primary" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i> Send</button>
+  </div>
+</div>
+
+<script>
+let msgToId = null;
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('main-content').innerHTML = document.getElementById('page-body').innerHTML;
+  initNotifications();
+  loadRequests();
+  document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+});
+
+function loadRequests(){
+  const reqs = (DB.get('urgent_requests')||[]).filter(r=>r.active);
+  const grid = document.getElementById('req-grid');
+  if(!grid) return;
+  if(!reqs.length){
+    grid.innerHTML='<div class="glass-card" style="text-align:center;padding:50px;"><i class="fa-solid fa-heart-pulse" style="font-size:3rem;color:var(--red);opacity:.3;"></i><p style="margin-top:14px;color:var(--muted);">No active urgent requests. The community is safe! 🎉</p></div>';
+    return;
+  }
+  const urgColors={critical:'#DC2626',high:'#D97706',moderate:'#CA8A04'};
+  const users = DB.get('users')||[];
+  grid.innerHTML = reqs.map(r=>{
+    const col = urgColors[r.urgency]||'#888';
+    const poster = users.find(u=>u.id===r.user_id);
+    const name = poster ? poster.email.split('@')[0] : 'Someone';
+    const ago = Math.floor((Date.now()-r.created)/3600000);
+    const timeStr = ago<1?'Just now':ago<24?ago+'h ago':Math.floor(ago/24)+'d ago';
+    return `<div class="req-card" style="border-left:4px solid ${col};">
+      <div style="position:absolute;top:15px;right:15px;background:${col}20;color:${col};padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;border:1px solid ${col}50;text-transform:uppercase;">${r.urgency}</div>
+      <div style="font-size:2.5rem;font-weight:900;font-family:'Playfair Display',serif;color:${col};line-height:1;margin-bottom:4px;">${r.blood_group}</div>
+      <div style="font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Blood Needed</div>
+      <div style="font-size:.9rem;margin-bottom:5px;"><i class="fa-solid fa-hospital" style="color:var(--red);width:18px;"></i> ${r.hospital}</div>
+      <div style="font-size:.9rem;margin-bottom:5px;"><i class="fa-solid fa-location-dot" style="color:var(--red);width:18px;"></i> ${r.city}</div>
+      <div style="font-size:.82rem;color:var(--muted);margin-bottom:12px;"><i class="fa-solid fa-user" style="width:18px;"></i> ${name} · ${timeStr}</div>
+      ${r.description?`<p style="font-size:.82rem;color:#777;font-style:italic;border-top:1px solid #FEE2E2;padding-top:10px;margin-bottom:12px;">"${r.description}"</p>`:''}
+      <div style="display:flex;gap:10px;">
+        <button class="btn-sm" style="flex:1;background:var(--red);color:white;" onclick="openMsgModal(${r.user_id},'${name}')"><i class="fa-solid fa-message"></i> I Can Help</button>
+        ${r.user_id===user.id?`<button class="btn-sm btn-outline" onclick="resolveReq(${r.id})"><i class="fa-solid fa-check"></i> Resolved</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function submitRequest(){
+  const hospital=document.getElementById('req-hospital').value.trim();
+  const city=document.getElementById('req-city').value.trim();
+  if(!hospital||!city){alert('Hospital and city are required.');return;}
+  const reqs=DB.get('urgent_requests')||[];
+  const nid=(DB.get('next_rid')||100);
+  reqs.push({id:nid,user_id:user.id,blood_group:document.getElementById('req-bg').value,hospital,city,urgency:document.getElementById('req-urgency').value,description:document.getElementById('req-desc').value.trim(),active:true,created:Date.now()});
+  DB.set('urgent_requests',reqs);
+  DB.set('next_rid',nid+1);
+  notifyNewUrgentRequest({urgency:document.getElementById('req-urgency').value,blood_group:document.getElementById('req-bg').value,hospital,city,user_id:user.id});
+  addPoints(user.id,10);
+  closeModal('new-req-modal');
+  document.getElementById('req-hospital').value='';
+  document.getElementById('req-city').value='';
+  document.getElementById('req-desc').value='';
+  loadRequests();
+}
+
+function resolveReq(id){
+  if(!confirm('Mark this request as resolved?'))return;
+  const reqs=DB.get('urgent_requests')||[];
+  const r=reqs.find(x=>x.id===id);
+  if(r)r.active=false;
+  DB.set('urgent_requests',reqs);
+  loadRequests();
+}
+
+function openMsgModal(id,name){
+  msgToId=id;
+  document.getElementById('msg-to-name').textContent=name;
+  openModal('msg-modal');
+}
+function sendMsg(){
+  const txt=document.getElementById('msg-text').value.trim();
+  if(!txt){alert('Please enter a message.');return;}
+  const msgs=DB.get('messages')||[];
+  msgs.push({id:Date.now(),from:user.id,to:msgToId,text:txt,ts:Date.now()});
+  notifyNewMessage(msgToId, user.email.split('@')[0]);
+  DB.set('messages',msgs);
+  closeModal('msg-modal');
+  document.getElementById('msg-text').value='';
+  alert('Message sent!');
+}
+</script>
+</body>
+</html>

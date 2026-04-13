@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Leaderboard | Red Hope</title>
+<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+<script src="shared.js"></script>
+<script src="notifications.js"></script>
+<script src="layout.js"></script>
+<script>const user = renderLayout('Leaderboard', 'leaderboard.html');</script>
+
+<div id="page-body" style="display:none;">
+  <div class="top-header">
+    <div><h1><i class="fa-solid fa-trophy" style="color:var(--gold);"></i> Top Donors</h1><p>Recognising our community's most generous lifesavers.</p></div>
+  </div>
+
+  <div class="podium" id="podium"></div>
+
+  <div class="glass-card" style="padding:0;overflow:hidden;">
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Donor</th>
+          <th>Badge</th>
+          <th style="text-align:right;">Points</th>
+        </tr>
+      </thead>
+      <tbody id="lb-body"></tbody>
+    </table>
+  </div>
+
+  <div class="glass-card" style="border-left:4px solid var(--red);background:linear-gradient(135deg,rgba(220,38,38,.04),rgba(220,38,38,.08));">
+    <div class="section-title" style="color:var(--red);"><i class="fa-solid fa-circle-question"></i> How to earn points?</div>
+    <p style="font-size:.9rem;line-height:1.5;margin-bottom:14px;color:var(--muted);">Points are our way of saying thank you for being an active lifesaver in the Red Hope community.</p>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:.9rem;">
+      <div><strong style="color:var(--green);">+10 Pts</strong> — Daily Login</div>
+      <div><strong style="color:var(--green);">+10 Pts</strong> — Posting an Urgent Request</div>
+      <div><strong style="color:var(--green);">+500 Pts</strong> — Logging a Blood or Organ Donation</div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('main-content').innerHTML = document.getElementById('page-body').innerHTML;
+  initNotifications();
+
+  const users = (DB.get('users')||[]).sort((a,b)=>b.points-a.points).slice(0,10).map((u,i)=>({...u,rank:i+1}));
+
+  // Podium
+  const podium = document.getElementById('podium');
+  if(users.length >= 3){
+    const order = [users[1], users[0], users[2]];
+    const heights = [120, 160, 100];
+    const colors = ['#94A3B8', '#F59E0B', '#CD7F32'];
+    const icons = ['fa-medal', 'fa-crown', 'fa-medal'];
+    podium.innerHTML = order.map((u,i)=>`
+      <div class="podium-item" style="width:${heights[i]+20}px;">
+        <div class="podium-avatar" style="width:${i===1?80:64}px;height:${i===1?80:64}px;background:white;box-shadow:0 4px 15px ${colors[i]}50;">
+          <i class="fa-solid ${icons[i]}" style="color:${colors[i]};font-size:${i===1?2:1.5}rem;"></i>
+        </div>
+        <div class="podium-block" style="height:${heights[i]}px;width:100%;background:linear-gradient(to top,${colors[i]}40,${colors[i]}15);border:1px solid ${colors[i]}50;">
+          <strong style="font-size:.85rem;text-align:center;">${u.email.split('@')[0]}</strong>
+          <span style="color:var(--green);font-weight:700;font-size:.88rem;">${u.points.toLocaleString()} Pts</span>
+        </div>
+      </div>`).join('');
+  }
+
+  // Table
+  const tbody = document.getElementById('lb-body');
+  tbody.innerHTML = users.map(u=>{
+    let badge, bStyle;
+    if(u.points>=500){badge='⭐ Legendary';bStyle='background:rgba(139,92,246,.1);color:#7C3AED;border:1px solid rgba(139,92,246,.3)';}
+    else if(u.points>=100){badge='🛡️ Saver';bStyle='background:rgba(59,130,246,.1);color:#2563EB;border:1px solid rgba(59,130,246,.3)';}
+    else{badge='Initiate';bStyle='background:rgba(148,163,184,.1);color:#64748B;border:1px solid rgba(148,163,184,.3)';}
+    return `<tr>
+      <td style="font-weight:700;color:${u.rank<=3?'var(--red)':'var(--text)'};">#${u.rank}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:32px;border-radius:50%;background:var(--red);color:white;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;">${u.email[0].toUpperCase()}</div>
+          ${u.email.split('@')[0]}
+          ${u.id===user.id?'<span class="badge" style="background:#FEE2E2;color:var(--red);">You</span>':''}
+        </div>
+      </td>
+      <td><span class="badge" style="${bStyle}">${badge}</span></td>
+      <td style="text-align:right;color:var(--green);font-weight:700;">${u.points.toLocaleString()}</td>
+    </tr>`;
+  }).join('');
+});
+</script>
+</body>
+</html>

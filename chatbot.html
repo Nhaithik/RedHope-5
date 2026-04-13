@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>AI Assistant | Red Hope</title>
+<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+<script src="shared.js"></script>
+<script src="notifications.js"></script>
+<script src="layout.js"></script>
+<script>const user = renderLayout('AI Assistant', 'chatbot.html');</script>
+
+<div id="page-body" style="display:none;">
+  <div class="top-header">
+    <div><h1>AI Assistant</h1><p>Ask anything about blood donation, eligibility, blood types, and more.</p></div>
+  </div>
+  <div class="chatbot-wrap">
+    <div class="chatbot-header">
+      <i class="fa-solid fa-robot"></i> Red Hope Assistant
+      <span style="font-size:.78rem;opacity:.7;margin-left:8px;">Powered by AI</span>
+    </div>
+    <div class="chat-history" id="chat-history">
+      <div class="bubble bot">Hello! 👋 I'm here to help with everything about blood donation — eligibility, blood types, how often you can donate, and how to find blood banks. What would you like to know?</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+        <button onclick="quickAsk('What is blood donation?')" style="background:#FFF8F8;border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:.78rem;cursor:pointer;color:var(--text);font-family:'DM Sans',sans-serif;">What is blood donation?</button>
+        <button onclick="quickAsk('What are the eligibility requirements?')" style="background:#FFF8F8;border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:.78rem;cursor:pointer;color:var(--text);font-family:'DM Sans',sans-serif;">Eligibility requirements?</button>
+        <button onclick="quickAsk('How often can I donate blood?')" style="background:#FFF8F8;border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:.78rem;cursor:pointer;color:var(--text);font-family:'DM Sans',sans-serif;">How often can I donate?</button>
+        <button onclick="quickAsk('What are the blood types?')" style="background:#FFF8F8;border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:.78rem;cursor:pointer;color:var(--text);font-family:'DM Sans',sans-serif;">Blood types?</button>
+      </div>
+    </div>
+    <div class="chatbot-input">
+      <input type="text" id="bot-input" placeholder="Ask me anything about blood donation..." onkeypress="if(event.key==='Enter')sendBot()"/>
+      <button class="chat-send" onclick="sendBot()"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
+<script>
+const botFAQ = {
+  'what is blood donation': 'Blood donation is the process of voluntarily giving blood for transfusions or medical procedures. It is completely safe, highly regulated, and <strong>saves millions of lives</strong> each year. The whole process takes about 30–45 minutes.',
+  'how to donate': 'You can donate blood at any registered blood bank or donation camp. Visit our <strong>Donation Map</strong> to find one near you. Just walk in with a valid ID — no prior appointment needed at most centers.',
+  'how often': 'You can donate <strong>whole blood every 56 days (8 weeks)</strong>. Platelets can be donated every 7 days (up to 24 times/year), and plasma every 28 days.',
+  'eligibility': 'To donate blood you must:<br>• Be at least <strong>18 years old</strong><br>• Weigh at least <strong>50 kg</strong><br>• Be in good general health<br>• Have adequate hemoglobin levels (≥12.5 g/dL)<br>• No tattoos or piercings in the last 6 months<br>• No recent illness or fever',
+  'blood type': 'There are <strong>8 main blood types</strong>: A+, A−, B+, B−, AB+, AB−, O+, O−.<br><br>🔴 <strong>O− is the universal donor</strong> (can give to anyone).<br>🟢 <strong>AB+ is the universal recipient</strong> (can receive from anyone).',
+  'benefits': 'Besides saving lives, donating blood:<br>• Reduces excess iron in your body<br>• Stimulates new blood cell production<br>• Gives you a free mini health check (blood pressure, hemoglobin, pulse)<br>• Burns approximately 650 calories per donation!',
+  'where': 'Use our <strong>Donation Map</strong> page (map icon in the sidebar) to find nearby blood banks and donation camps in your city.',
+  'points': 'You earn points for being active:<br>• <strong>+10 pts</strong> for daily login<br>• <strong>+10 pts</strong> for posting an urgent request<br>• <strong>+500 pts</strong> for logging a donation<br>Check the <strong>Leaderboard</strong> to see your rank!',
+  'register': 'You\'re already registered here on <strong>Red Hope</strong>! Update your donation availability in <strong>My Profile</strong>. You can also register with your national blood bank database for wider reach.',
+  'safe': 'Yes, blood donation is completely safe. A brand new sterile needle is used for every donor — there is <strong>zero risk of infection</strong>. You may feel slightly lightheaded afterwards, but this passes quickly with rest and fluids.',
+  'diet': 'Before donating: eat a healthy meal, drink plenty of water, avoid fatty foods. After donating: drink extra fluids, avoid alcohol for 24 hours, eat iron-rich foods (spinach, lentils, meat) to replenish.',
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('main-content').innerHTML = document.getElementById('page-body').innerHTML;
+  initNotifications();
+});
+
+function quickAsk(q){ document.getElementById('bot-input').value=q; sendBot(); }
+
+function sendBot(){
+  const input=document.getElementById('bot-input');
+  const msg=input.value.trim();
+  if(!msg) return;
+  input.value=''; input.disabled=true;
+  appendMsg(msg,'user');
+  const lower=msg.toLowerCase();
+  let reply="I'm still learning! I can answer questions about: <strong>blood donation basics</strong>, <strong>eligibility</strong>, <strong>blood types</strong>, <strong>donation frequency</strong>, <strong>benefits</strong>, <strong>safety</strong>, <strong>diet tips</strong>, <strong>finding blood banks</strong>, and <strong>earning points</strong>. Try asking about one of those!";
+  for(const key in botFAQ){ if(lower.includes(key)){reply=botFAQ[key];break;} }
+  setTimeout(()=>{appendMsg(reply,'bot');input.disabled=false;input.focus();},650);
+}
+
+function appendMsg(text, role){
+  const box=document.getElementById('chat-history');
+  const div=document.createElement('div');
+  div.innerHTML=text;
+  div.className=`bubble ${role==='user'?'sent':'bot'}`;
+  div.style.opacity='0'; div.style.transform='translateY(8px)'; div.style.transition='all .3s';
+  box.appendChild(div);
+  setTimeout(()=>{div.style.opacity='1';div.style.transform='translateY(0)';box.scrollTop=box.scrollHeight;},10);
+}
+</script>
+</body>
+</html>

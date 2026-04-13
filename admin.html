@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Admin Panel | Red Hope</title>
+<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.admin-stat{background:white;border-radius:14px;padding:20px;border:1px solid #FEE2E2;box-shadow:0 2px 10px rgba(220,38,38,.05);display:flex;align-items:center;gap:16px;}
+.admin-stat-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
+.admin-stat-val{font-size:1.8rem;font-weight:800;font-family:'Playfair Display',serif;line-height:1;}
+.admin-stat-lbl{font-size:.78rem;color:var(--muted);margin-top:3px;}
+.admin-tabs{display:flex;gap:4px;background:#FFF8F8;padding:5px;border-radius:12px;border:1px solid #FEE2E2;margin-bottom:22px;flex-wrap:wrap;}
+.admin-tab{padding:9px 18px;border-radius:9px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.88rem;cursor:pointer;color:var(--muted);transition:all .2s;}
+.admin-tab.active{background:white;color:var(--red);box-shadow:0 2px 8px rgba(220,38,38,.12);}
+.admin-tab:hover:not(.active){color:var(--text);background:rgba(255,255,255,.6);}
+.admin-section{display:none;}
+.admin-section.active{display:block;}
+.action-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.input-sm{padding:8px 12px;border-radius:8px;border:1.5px solid var(--border);font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;}
+.input-sm:focus{border-color:var(--red);}
+.user-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #FEE2E2;flex-wrap:wrap;}
+.user-row:hover{background:#FFF8F8;}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:var(--red);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0;}
+</style>
+</head>
+<body>
+<script src="shared.js"></script>
+<script src="notifications.js"></script>
+<script src="layout.js"></script>
+<script>
+const user = renderLayout('Admin Panel', 'admin.html');
+</script>
+
+<div id="page-body" style="display:none;">
+  <div class="top-header">
+    <div>
+      <h1><i class="fa-solid fa-shield-halved" style="color:var(--red);"></i> Admin Panel</h1>
+      <p style="color:var(--muted);">Manage users, blood stock, requests and broadcasts.</p>
+    </div>
+    <div id="admin-check-msg"></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:24px;" id="admin-stats"></div>
+
+  <!-- Tabs -->
+  <div class="admin-tabs">
+    <button class="admin-tab active" onclick="showTab('users',this)"><i class="fa-solid fa-users"></i> Users</button>
+    <button class="admin-tab" onclick="showTab('blood',this)"><i class="fa-solid fa-droplet"></i> Blood Stock</button>
+    <button class="admin-tab" onclick="showTab('requests',this)"><i class="fa-solid fa-triangle-exclamation"></i> Requests</button>
+    <button class="admin-tab" onclick="showTab('donations',this)"><i class="fa-solid fa-heart"></i> All Donations</button>
+    <button class="admin-tab" onclick="showTab('broadcast',this)"><i class="fa-solid fa-bullhorn"></i> Broadcast</button>
+    <button class="admin-tab" onclick="showTab('charts',this)"><i class="fa-solid fa-chart-bar"></i> Analytics</button>
+  </div>
+
+  <!-- USERS -->
+  <div class="admin-section active" id="tab-users">
+    <div class="glass-card" style="padding:0;overflow:hidden;">
+      <div style="padding:16px 20px;border-bottom:1px solid #FEE2E2;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div class="section-title" style="margin:0;"><i class="fa-solid fa-users"></i> Registered Users</div>
+        <input type="text" class="input-sm" id="user-search" placeholder="Search by email..." oninput="renderUsers()" style="width:220px;"/>
+      </div>
+      <div id="users-list"></div>
+    </div>
+  </div>
+
+  <!-- BLOOD STOCK -->
+  <div class="admin-section" id="tab-blood">
+    <div class="glass-card" style="padding:0;overflow:hidden;">
+      <div style="padding:16px 20px;border-bottom:1px solid #FEE2E2;">
+        <div class="section-title" style="margin:0;"><i class="fa-solid fa-droplet"></i> Manage Blood Stock</div>
+      </div>
+      <div id="blood-stock-list"></div>
+    </div>
+  </div>
+
+  <!-- REQUESTS -->
+  <div class="admin-section" id="tab-requests">
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+      <button class="btn-sm" style="background:var(--green);color:white;" onclick="filterReqs('active')">Active</button>
+      <button class="btn-sm btn-outline" onclick="filterReqs('all')">All</button>
+      <button class="btn-sm" style="background:var(--muted);color:white;" onclick="filterReqs('resolved')">Resolved</button>
+    </div>
+    <div class="glass-card" style="padding:0;overflow:hidden;">
+      <table>
+        <thead><tr><th>Blood</th><th>Hospital</th><th>City</th><th>Urgency</th><th>Posted By</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="req-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ALL DONATIONS -->
+  <div class="admin-section" id="tab-donations">
+    <div class="glass-card" style="padding:0;overflow:hidden;">
+      <table>
+        <thead><tr><th>Type</th><th>Blood Group</th><th>Location</th><th>Units</th><th>Date</th><th>Donor</th></tr></thead>
+        <tbody id="donations-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- BROADCAST -->
+  <div class="admin-section" id="tab-broadcast">
+    <div class="glass-card" style="max-width:620px;">
+      <div class="section-title"><i class="fa-solid fa-bullhorn" style="color:var(--red);"></i> Broadcast Notification to All Users</div>
+      <div class="form-group">
+        <label>Notification Type</label>
+        <select id="bc-type">
+          <option value="system">📢 System Announcement</option>
+          <option value="blood_critical">🩸 Blood Alert</option>
+          <option value="urgent_request">⚠️ Urgent Request</option>
+          <option value="leaderboard">🏆 Leaderboard Update</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Title</label><input type="text" id="bc-title" placeholder="e.g. Platform Update"/></div>
+      <div class="form-group"><label>Message</label><textarea id="bc-body" style="height:80px;resize:vertical;" placeholder="Message to send to all users..."></textarea></div>
+      <div class="form-group"><label>Link (optional)</label>
+        <select id="bc-link">
+          <option value="">None</option>
+          <option value="dashboard.html">Dashboard</option>
+          <option value="blood_availability.html">Blood Availability</option>
+          <option value="urgent_requests.html">Urgent Requests</option>
+          <option value="leaderboard.html">Leaderboard</option>
+          <option value="donation_history.html">Donation History</option>
+        </select>
+      </div>
+      <div style="background:#FEF3C7;border:1px solid #FCD34D;border-radius:10px;padding:12px;font-size:.85rem;color:#92400E;margin-bottom:18px;">
+        <i class="fa-solid fa-triangle-exclamation"></i> This will send a notification to <strong>all registered users</strong>.
+      </div>
+      <button class="btn-primary" style="width:auto;padding:11px 28px;" onclick="sendBroadcast()"><i class="fa-solid fa-paper-plane"></i> Send Broadcast</button>
+      <div id="bc-success" class="success-msg" style="margin-top:14px;"></div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div class="admin-section" id="tab-charts">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex-wrap:wrap;">
+      <div class="glass-card"><div class="section-title">Donations by Type</div><canvas id="typeChart" height="200"></canvas></div>
+      <div class="glass-card"><div class="section-title">Blood Group Distribution</div><canvas id="bgChart" height="200"></canvas></div>
+      <div class="glass-card" style="grid-column:1/-1;"><div class="section-title">Monthly Donations (This Year)</div><canvas id="monthChart" height="80"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let reqFilter = 'active';
+let chartsDone = false;
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('main-content').innerHTML = document.getElementById('page-body').innerHTML;
+  initNotifications();
+
+  // Check if admin
+  if (user.points < 9000 && user.email !== 'admin@redhope.com') {
+    const msg = document.getElementById('admin-check-msg');
+    if(msg) { msg.innerHTML='<div class="error-msg" style="display:block;">⚠️ Admin access only. Some features may be restricted.</div>'; }
+  }
+
+  renderStats();
+  renderUsers();
+  renderBloodStock();
+  renderRequests();
+  renderDonationsTable();
+});
+
+function showTab(name, btn) {
+  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'charts' && !chartsDone) { renderCharts(); chartsDone = true; }
+}
+
+function renderStats() {
+  const users = DB.get('users') || [];
+  const donations = DB.get('donations') || [];
+  const reqs = (DB.get('urgent_requests') || []).filter(r => r.active);
+  const msgs = DB.get('messages') || [];
+  const stats = [
+    { val: users.length, lbl: 'Total Users', icon: 'fa-users', color: '#3B82F6', bg: '#DBEAFE' },
+    { val: donations.length, lbl: 'Total Donations', icon: 'fa-heart', color: '#10B981', bg: '#D1FAE5' },
+    { val: reqs.length, lbl: 'Active Requests', icon: 'fa-triangle-exclamation', color: '#DC2626', bg: '#FEE2E2' },
+    { val: msgs.length, lbl: 'Total Messages', icon: 'fa-comments', color: '#8B5CF6', bg: '#EDE9FE' },
+  ];
+  const el = document.getElementById('admin-stats');
+  if(!el) return;
+  el.innerHTML = stats.map(s => `
+    <div class="admin-stat">
+      <div class="admin-stat-icon" style="background:${s.bg};color:${s.color};"><i class="fa-solid ${s.icon}"></i></div>
+      <div><div class="admin-stat-val" style="color:${s.color};">${s.val}</div><div class="admin-stat-lbl">${s.lbl}</div></div>
+    </div>`).join('');
+}
+
+function renderUsers() {
+  const q = (document.getElementById('user-search')?.value || '').toLowerCase();
+  let users = DB.get('users') || [];
+  if (q) users = users.filter(u => u.email.toLowerCase().includes(q));
+  const el = document.getElementById('users-list');
+  if (!el) return;
+  el.innerHTML = users.map(u => `
+    <div class="user-row">
+      <div class="user-avatar">${u.email[0].toUpperCase()}</div>
+      <div style="flex:1;min-width:120px;">
+        <div style="font-weight:600;font-size:.9rem;">${u.email}</div>
+        <div style="font-size:.78rem;color:var(--muted);">${u.gender||''} · Age ${u.age||'?'} · ${u.phone||'No phone'}</div>
+      </div>
+      <span style="font-weight:800;color:var(--red);font-size:.95rem;">${u.blood_group}</span>
+      <span class="badge" style="background:${u.available_blood?'rgba(16,185,129,.1)':'rgba(200,200,200,.1)'};color:${u.available_blood?'var(--green)':'var(--muted)'};">
+        ${u.available_blood ? '✓ Blood' : '✗ Blood'}
+      </span>
+      <span style="background:#FEF3C7;color:#92400E;padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:700;"><i class="fa-solid fa-star"></i> ${(u.points||0).toLocaleString()}</span>
+      <div class="action-row">
+        <button class="btn-sm" style="background:var(--red-light);color:var(--red-dark);" onclick="addAdminPoints(${u.id})"><i class="fa-solid fa-plus"></i> Points</button>
+        <button class="btn-sm btn-outline" onclick="sendAdminMsg(${u.id},'${u.email.split('@')[0]}')"><i class="fa-solid fa-message"></i></button>
+      </div>
+    </div>`).join('');
+}
+
+function addAdminPoints(uid) {
+  const pts = prompt('Add points to user (enter number):');
+  if (!pts || isNaN(parseInt(pts))) return;
+  const p = parseInt(pts);
+  addPoints(uid, p);
+  Notif.push(uid, 'points_earned', `⭐ +${p} Bonus Points!`, `An admin has awarded you ${p} bonus points. Keep up the great work!`, 'leaderboard.html');
+  renderUsers();
+  renderStats();
+  alert(`✅ ${p} points added and user notified.`);
+}
+
+function sendAdminMsg(uid, name) {
+  const msg = prompt(`Send a system message to ${name}:`);
+  if (!msg) return;
+  Notif.push(uid, 'system', '📢 Message from Admin', msg, null);
+  alert('Message sent as notification to ' + name);
+}
+
+function renderBloodStock() {
+  const avail = DB.get('blood_avail') || [];
+  const el = document.getElementById('blood-stock-list');
+  if (!el) return;
+  el.innerHTML = avail.map(a => {
+    const pct = Math.min(100, Math.round((a.units_available / Math.max(1, a.units_needed)) * 100));
+    const col = pct < 30 ? '#DC2626' : pct < 70 ? '#D97706' : '#10B981';
+    return `
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid #FEE2E2;flex-wrap:wrap;">
+        <div style="font-size:1.3rem;font-weight:900;font-family:'Playfair Display',serif;color:${col};width:40px;">${a.blood_group}</div>
+        <div style="flex:1;min-width:140px;">
+          <div class="bar-bg" style="margin:0;"><div class="bar-fill" style="width:${pct}%;background:${col};"></div></div>
+        </div>
+        <div style="font-size:.85rem;font-weight:600;width:90px;color:${col};">${a.units_available}/${a.units_needed} units</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="number" value="${a.units_available}" min="0" id="stock-${a.blood_group.replace('+','p').replace('-','m')}" class="input-sm" style="width:80px;"/>
+          <button class="btn-sm" style="background:var(--red);color:white;" onclick="updateStock('${a.blood_group}')">Update</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function updateStock(bg) {
+  const key = 'stock-' + bg.replace('+', 'p').replace('-', 'm');
+  const val = parseInt(document.getElementById(key)?.value);
+  if (isNaN(val) || val < 0) { alert('Invalid value'); return; }
+  const avail = DB.get('blood_avail') || [];
+  const a = avail.find(x => x.blood_group === bg);
+  if (a) { a.units_available = val; DB.set('blood_avail', avail); }
+  // Alert if critical
+  if (val / Math.max(1, a?.units_needed || 1) < 0.3) {
+    Notif.broadcast('blood_critical', `🩸 ${bg} Blood Critically Low`, `Only ${val} units available. Donors urgently needed!`, 'blood_availability.html');
+    alert(`✅ Stock updated. Critical level detected — all users notified.`);
+  } else {
+    alert(`✅ ${bg} stock updated to ${val} units.`);
+  }
+  renderBloodStock();
+}
+
+function renderRequests() {
+  const reqs = DB.get('urgent_requests') || [];
+  const filtered = reqFilter === 'active' ? reqs.filter(r => r.active)
+    : reqFilter === 'resolved' ? reqs.filter(r => !r.active) : reqs;
+  const users = DB.get('users') || [];
+  const el = document.getElementById('req-table');
+  if (!el) return;
+  const urgCol = { critical:'#DC2626', high:'#D97706', moderate:'#CA8A04' };
+  el.innerHTML = filtered.length ? filtered.map(r => {
+    const poster = users.find(u => u.id === r.user_id);
+    return `<tr>
+      <td style="font-weight:800;color:var(--red);">${r.blood_group}</td>
+      <td>${r.hospital}</td>
+      <td>${r.city}</td>
+      <td><span class="badge" style="background:${urgCol[r.urgency]}20;color:${urgCol[r.urgency]};">${r.urgency}</span></td>
+      <td style="font-size:.82rem;">${poster?.email.split('@')[0]||'Unknown'}</td>
+      <td><span class="badge" style="background:${r.active?'rgba(16,185,129,.1)':'rgba(200,200,200,.15)'};color:${r.active?'var(--green)':'var(--muted)'};">${r.active?'Active':'Resolved'}</span></td>
+      <td>
+        ${r.active ? `<button class="btn-sm btn-outline" onclick="adminResolveReq(${r.id})"><i class="fa-solid fa-check"></i> Resolve</button>` : ''}
+        <button class="btn-sm" style="background:#FEE2E2;color:var(--red);margin-left:4px;" onclick="adminDeleteReq(${r.id})"><i class="fa-solid fa-trash"></i></button>
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:30px;">No requests found.</td></tr>`;
+}
+
+function filterReqs(f) { reqFilter = f; renderRequests(); }
+
+function adminResolveReq(id) {
+  const reqs = DB.get('urgent_requests') || [];
+  const r = reqs.find(x => x.id === id);
+  if (r) { r.active = false; DB.set('urgent_requests', reqs); }
+  renderRequests();
+}
+
+function adminDeleteReq(id) {
+  if (!confirm('Permanently delete this request?')) return;
+  DB.set('urgent_requests', (DB.get('urgent_requests') || []).filter(r => r.id !== id));
+  renderRequests();
+  renderStats();
+}
+
+function renderDonationsTable() {
+  const donations = (DB.get('donations') || []).sort((a, b) => new Date(b.date) - new Date(a.date));
+  const users = DB.get('users') || [];
+  const el = document.getElementById('donations-table');
+  if (!el) return;
+  const typeColors = { blood:'#DC2626', organ:'#8B5CF6', platelet:'#F59E0B', plasma:'#3B82F6' };
+  el.innerHTML = donations.length ? donations.map(d => {
+    const donor = users.find(u => u.id === d.user_id);
+    const col = typeColors[d.type] || '#888';
+    return `<tr>
+      <td><span class="badge" style="background:${col}20;color:${col};">${d.type}</span></td>
+      <td style="font-weight:700;color:var(--red);">${d.blood_group}</td>
+      <td>${d.location}</td>
+      <td>${d.units}</td>
+      <td>${new Date(d.date).toLocaleDateString()}</td>
+      <td style="font-size:.82rem;">${donor?.email.split('@')[0]||'Unknown'}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px;">No donations logged yet.</td></tr>`;
+}
+
+function sendBroadcast() {
+  const title = document.getElementById('bc-title').value.trim();
+  const body = document.getElementById('bc-body').value.trim();
+  const type = document.getElementById('bc-type').value;
+  const link = document.getElementById('bc-link').value || null;
+  if (!title || !body) { alert('Title and message are required.'); return; }
+  Notif.broadcast(type, title, body, link, null);
+  const suc = document.getElementById('bc-success');
+  suc.textContent = `✅ Broadcast sent to all users!`;
+  suc.style.display = 'block';
+  document.getElementById('bc-title').value = '';
+  document.getElementById('bc-body').value = '';
+  setTimeout(() => suc.style.display = 'none', 4000);
+}
+
+function renderCharts() {
+  const donations = DB.get('donations') || [];
+  // Type chart
+  const typeCounts = {};
+  donations.forEach(d => { typeCounts[d.type] = (typeCounts[d.type] || 0) + 1; });
+  new Chart(document.getElementById('typeChart'), { type:'doughnut', data:{ labels:Object.keys(typeCounts), datasets:[{ data:Object.values(typeCounts), backgroundColor:['#DC2626','#8B5CF6','#F59E0B','#3B82F6'], borderWidth:0 }] }, options:{responsive:true,plugins:{legend:{position:'bottom'}}} });
+
+  // Blood group chart
+  const bgCounts = {};
+  donations.forEach(d => { bgCounts[d.blood_group] = (bgCounts[d.blood_group] || 0) + 1; });
+  new Chart(document.getElementById('bgChart'), { type:'bar', data:{ labels:Object.keys(bgCounts), datasets:[{ data:Object.values(bgCounts), backgroundColor:'rgba(220,38,38,.7)', borderRadius:6 }] }, options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'rgba(200,200,200,.1)'}},x:{grid:{display:false}}}} });
+
+  // Monthly chart
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const monthlyCounts = new Array(12).fill(0);
+  donations.forEach(d => { const m = new Date(d.date).getMonth(); if(!isNaN(m)) monthlyCounts[m]++; });
+  new Chart(document.getElementById('monthChart'), { type:'line', data:{ labels:months, datasets:[{ label:'Donations', data:monthlyCounts, borderColor:'#DC2626', backgroundColor:'rgba(220,38,38,.08)', borderWidth:3, tension:.4, fill:true }] }, options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true},x:{grid:{display:false}}}} });
+}
+</script>
+</body>
+</html>

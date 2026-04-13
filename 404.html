@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Page Not Found | Red Hope</title>
+<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<style>
+.page-404{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#fff0f0,#fff8f8);position:relative;overflow:hidden;}
+.card-404{background:rgba(255,255,255,.92);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.6);border-radius:28px;padding:60px 55px;max-width:520px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(220,38,38,.12);animation:slideUp .8s cubic-bezier(.175,.885,.32,1.275);}
+.big-404{font-family:'Playfair Display',serif;font-size:7rem;font-weight:900;color:var(--red);line-height:1;opacity:.15;margin-bottom:-20px;}
+.drop-icon{width:90px;height:90px;background:linear-gradient(135deg,#DC2626,#991B1B);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:2.2rem;color:white;box-shadow:0 10px 30px rgba(220,38,38,.35);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+.link-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:28px;}
+.link-card{background:#FFF8F8;border:1px solid #FEE2E2;border-radius:12px;padding:14px;text-decoration:none;color:var(--text);transition:all .2s;display:flex;align-items:center;gap:10px;font-size:.88rem;font-weight:600;}
+.link-card:hover{background:var(--red-light);border-color:var(--red);color:var(--red);transform:translateY(-2px);}
+.link-card i{color:var(--red);width:18px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="page-404">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="card-404">
+    <div class="big-404">404</div>
+    <div class="drop-icon"><i class="fa-solid fa-droplet-slash"></i></div>
+    <h1 style="font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--text);margin-bottom:10px;">Page Not Found</h1>
+    <p style="color:var(--muted);line-height:1.6;font-size:.95rem;">This page doesn't exist or may have been removed. Don't worry — there are plenty of ways to help save lives.</p>
+    <a href="dashboard.html" style="display:inline-flex;align-items:center;gap:8px;margin-top:22px;padding:13px 28px;border-radius:30px;background:linear-gradient(135deg,#DC2626,#991B1B);color:white;text-decoration:none;font-weight:700;font-size:.95rem;box-shadow:0 6px 20px rgba(220,38,38,.35);transition:all .3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+      <i class="fa-solid fa-gauge"></i> Go to Dashboard
+    </a>
+    <div class="link-grid">
+      <a href="donor_search.html" class="link-card"><i class="fa-solid fa-magnifying-glass"></i> Find Donors</a>
+      <a href="urgent_requests.html" class="link-card"><i class="fa-solid fa-triangle-exclamation"></i> Urgent Requests</a>
+      <a href="blood_availability.html" class="link-card"><i class="fa-solid fa-droplet"></i> Blood Availability</a>
+      <a href="donation_camps.html" class="link-card"><i class="fa-solid fa-campground"></i> Donation Camps</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Settings | Red Hope</title>
+<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<style>
+.settings-layout{display:grid;grid-template-columns:220px 1fr;gap:20px;}
+.settings-nav{background:white;border-radius:16px;border:1px solid #FEE2E2;padding:12px;height:fit-content;position:sticky;top:80px;}
+.s-nav-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;cursor:pointer;font-size:.88rem;font-weight:600;color:var(--muted);transition:all .2s;text-decoration:none;}
+.s-nav-item:hover{background:#FFF8F8;color:var(--text);}
+.s-nav-item.active{background:var(--red-light);color:var(--red);}
+.s-nav-item i{width:16px;text-align:center;}
+.settings-panel{display:none;}
+.settings-panel.active{display:block;}
+.settings-section{background:white;border-radius:16px;border:1px solid #FEE2E2;padding:24px;margin-bottom:16px;}
+.settings-section h3{font-family:'Playfair Display',serif;font-size:1.05rem;margin-bottom:4px;}
+.settings-section .desc{font-size:.83rem;color:var(--muted);margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid #FEE2E2;}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #FFF8F8;gap:20px;}
+.setting-row:last-child{border-bottom:none;padding-bottom:0;}
+.setting-info strong{display:block;font-size:.9rem;margin-bottom:2px;}
+.setting-info span{font-size:.8rem;color:var(--muted);}
+/* Toggle switch */
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-slider{position:absolute;inset:0;background:#E5E7EB;border-radius:30px;cursor:pointer;transition:.3s;}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:white;border-radius:50%;transition:.3s;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.toggle input:checked + .toggle-slider{background:var(--red);}
+.toggle input:checked + .toggle-slider::before{transform:translateX(20px);}
+/* Danger zone */
+.danger-btn{background:#FEF2F2;color:#DC2626;border:1.5px solid #FECACA;padding:10px 20px;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.88rem;cursor:pointer;transition:all .2s;}
+.danger-btn:hover{background:#DC2626;color:white;}
+/* Color picker theme */
+.theme-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+.theme-swatch{width:40px;height:40px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .2s;}
+.theme-swatch.selected{border-color:var(--text);transform:scale(1.15);}
+.theme-swatch:hover{transform:scale(1.1);}
+/* Range */
+input[type=range]{accent-color:var(--red);width:100%;cursor:pointer;}
+@media(max-width:768px){.settings-layout{grid-template-columns:1fr;}.settings-nav{position:static;display:flex;flex-wrap:wrap;gap:4px;}}
+</style>
+</head>
+<body>
+<script src="shared.js"></script>
+<script src="notifications.js"></script>
+<script src="layout.js"></script>
+<script>const user = renderLayout('Settings', 'settings.html');</script>
+
+<div id="page-body" style="display:none;">
+  <div class="top-header">
+    <div><h1><i class="fa-solid fa-gear" style="color:var(--red);"></i> Settings</h1><p>Manage your account, preferences and privacy.</p></div>
+    <div id="save-status" style="display:none;background:#D1FAE5;color:#065F46;padding:8px 16px;border-radius:20px;font-size:.85rem;font-weight:600;"><i class="fa-solid fa-check"></i> Saved!</div>
+  </div>
+
+  <div class="settings-layout">
+    <!-- Sidebar nav -->
+    <div class="settings-nav">
+      <a class="s-nav-item active" onclick="showPanel('notifications',this)"><i class="fa-solid fa-bell"></i> Notifications</a>
+      <a class="s-nav-item" onclick="showPanel('appearance',this)"><i class="fa-solid fa-palette"></i> Appearance</a>
+      <a class="s-nav-item" onclick="showPanel('privacy',this)"><i class="fa-solid fa-shield"></i> Privacy</a>
+      <a class="s-nav-item" onclick="showPanel('account',this)"><i class="fa-solid fa-user-gear"></i> Account</a>
+      <a class="s-nav-item" onclick="showPanel('data',this)"><i class="fa-solid fa-database"></i> Data & Storage</a>
+      <a class="s-nav-item" onclick="showPanel('about',this)"><i class="fa-solid fa-circle-info"></i> About</a>
+    </div>
+
+    <div>
+      <!-- NOTIFICATIONS PANEL -->
+      <div class="settings-panel active" id="panel-notifications">
+        <div class="settings-section">
+          <h3><i class="fa-solid fa-bell" style="color:var(--red);"></i> Notification Preferences</h3>
+          <p class="desc">Choose which notifications you receive. Changes save automatically.</p>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Urgent Blood Requests</strong><span>Get notified when a new urgent request is posted</span></div>
+            <label class="toggle"><input type="checkbox" id="n-urgent" onchange="saveSetting('n-urgent',this.checked)"/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>New Messages</strong><span>Notify me when I receive a message</span></div>
+            <label class="toggle"><input type="checkbox" id="n-messages" onchange="saveSetting('n-messages',this.checked)"/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Donation Reminders</strong><span>Remind me when I'm eligible to donate again</span></div>
+            <label class="toggle"><input type="checkbox" id="n-reminders" onchange="saveSetting('n-reminders',this.checked)"/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Critical Blood Shortage Alerts</strong><span>Alert when blood stock drops critically low</span></div>
+            <label class="toggle"><input type="checkbox" id="n-blood-alerts" onchange="saveSetting('n-blood-alerts',this.checked)"/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Leaderboard Updates</strong><span>Notify when my rank changes</span></div>
+            <label class="toggle"><input type="checkbox" id="n-leaderboard" onchange="saveSetting('n-leaderboard',this.checked)"/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Points Earned</strong><span>Celebrate when you earn reward points</span></div>
+            <label class="toggle"><input type="checkbox" id="n-points" onchange="saveSetting('n-points',this.checked)"/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Donation Camp Announcements</strong><span>Get notified about upcoming donation drives near you</span></div>
+            <label class="toggle"><input type="checkbox" id="n-camps" onchange="saveSetting('n-camps',this.checked)"/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Toast Pop-ups</strong><span>Show animated toast notifications on screen</span></div>
+            <label class="toggle"><input type="checkbox" id="n-toasts" onchange="saveSetting('n-toasts',this.checked)"/><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3><i class="fa-solid fa-clock" style="color:var(--blue);"></i> Notification Frequency</h3>
+          <p class="desc">Control how often system notifications are generated.</p>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Auto-check interval</strong><span>How often we scan for new alerts</span></div>
+            <select id="notif-freq" onchange="saveSetting('notif-freq',this.value)" style="padding:8px 12px;border-radius:8px;border:1.5px solid var(--border);font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;">
+              <option value="daily">Once per day</option>
+              <option value="always">Every login</option>
+              <option value="never">Never (manual only)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- APPEARANCE PANEL -->
+      <div class="settings-panel" id="panel-appearance">
+        <div class="settings-section">
+          <h3><i class="fa-solid fa-palette" style="color:#8B5CF6;"></i> Theme & Appearance</h3>
+          <p class="desc">Personalise how Red Hope looks for you.</p>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Accent Color</strong><span>Choose your primary theme color</span></div>
+            <div class="theme-grid" id="color-swatches">
+              <div class="theme-swatch" style="background:#DC2626;" data-color="#DC2626" data-dark="#991B1B" onclick="setTheme('#DC2626','#991B1B',this)" title="Red (default)"></div>
+              <div class="theme-swatch" style="background:#7C3AED;" data-color="#7C3AED" data-dark="#5B21B6" onclick="setTheme('#7C3AED','#5B21B6',this)" title="Purple"></div>
+              <div class="theme-swatch" style="background:#0EA5E9;" data-color="#0EA5E9" data-dark="#0369A1" onclick="setTheme('#0EA5E9','#0369A1',this)" title="Blue"></div>
+              <div class="theme-swatch" style="background:#059669;" data-color="#059669" data-dark="#047857" onclick="setTheme('#059669','#047857',this)" title="Green"></div>
+              <div class="theme-swatch" style="background:#EA580C;" data-color="#EA580C" data-dark="#9A3412" onclick="setTheme('#EA580C','#9A3412',this)" title="Orange"></div>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Compact Mode</strong><span>Reduce spacing for more content on screen</span></div>
+            <label class="toggle"><input type="checkbox" id="compact-mode" onchange="applyCompact(this.checked);saveSetting('compact-mode',this.checked)"/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Sidebar Collapsed</strong><span>Show icon-only sidebar to save space</span></div>
+            <label class="toggle"><input type="checkbox" id="sidebar-collapsed" onchange="saveSetting('sidebar-collapsed',this.checked)"/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Animation Speed</strong><span>Control UI animation speed</span></div>
+            <div style="display:flex;align-items:center;gap:10px;min-width:180px;">
+              <span style="font-size:.78rem;color:var(--muted);">Slow</span>
+              <input type="range" id="anim-speed" min="0" max="2" step="1" value="1" oninput="saveSetting('anim-speed',this.value)" style="flex:1;"/>
+              <span style="font-size:.78rem;color:var(--muted);">Fast</span>
+            </div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3><i class="fa-solid fa-font" style="color:var(--blue);"></i> Typography</h3>
+          <p class="desc">Adjust text sizes to your preference.</p>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Font Size</strong><span id="font-size-label">Medium (16px)</span></div>
+            <div style="display:flex;align-items:center;gap:10px;min-width:180px;">
+              <span style="font-size:.78rem;color:var(--muted);">A</span>
+              <input type="range" id="font-size" min="14" max="20" step="1" value="16" oninput="applyFontSize(this.value);saveSetting('font-size',this.value)" style="flex:1;"/>
+              <span style="font-size:1.1rem;color:var(--muted);">A</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRIVACY PANEL -->
+      <div class="settings-panel" id="panel-privacy">
+        <div class="settings-section">
+          <h3><i class="fa-solid fa-shield" style="color:var(--green);"></i> Privacy Settings</h3>
+          <p class="desc">Control who can see your information in the Red Hope network.</p>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Show in Donor Search</strong><span>Allow other users to find you via donor search</span></div>
+            <label class="toggle"><input type="checkbox" id="p-visible" onchange="saveSetting('p-visible',this.checked)"/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Show Blood Type Publicly</strong><span>Display your blood type on your profile</span></div>
+            <label class="toggle"><input type="checkbox" id="p-show-blood" onchange="saveSetting('p-show-blood',this.checked)"/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Show on Leaderboard</strong><span>Include my name in the public leaderboard</span></div>
+            <label class="toggle"><input type="checkbox" id="p-leaderboard" onchange="saveSetting('p-leaderboard',this.checked)"/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Allow Direct Messages</strong><span>Let other donors message you directly</span></div>
+            <label class="toggle"><input type="checkbox" id="p-messages" onchange="saveSetting('p-messages',this.checked)"/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Show Phone Number</strong><span>Display phone number to matched donors</span></div>
+            <label class="toggle"><input type="checkbox" id="p-phone" onchange="saveSetting('p-phone',this.checked)"/><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACCOUNT PANEL -->
+      <div class="settings-panel" id="panel-account">
+        <div class="settings-section">
+          <h3><i class="fa-solid fa-key" style="color:var(--gold);"></i> Change Password</h3>
+          <p class="desc">Keep your account secure with a strong password.</p>
+          <div id="pw-error" class="error-msg"></div>
+          <div id="pw-success" class="success-msg"></div>
+          <div class="form-group"><label>Current Password</label><input type="password" id="pw-current" placeholder="••••••••"/></div>
+          <div class="form-group"><label>New Password</label><input type="password" id="pw-new" placeholder="min 6 characters"/></div>
+          <div class="form-group"><label>Confirm New Password</label><input type="password" id="pw-confirm" placeholder="repeat new password"/></div>
+          <button class="btn-primary" style="width:auto;padding:11px 24px;" onclick="changePassword()"><i class="fa-solid fa-floppy-disk"></i> Update Password</button>
+        </div>
+        <div class="settings-section">
+          <h3><i class="fa-solid fa-envelope" style="color:var(--blue);"></i> Email Preferences</h3>
+          <p class="desc">Manage communication preferences.</p>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Weekly Summary Email</strong><span>Receive a weekly digest of your activity</span></div>
+            <label class="toggle"><input type="checkbox" id="e-weekly" onchange="saveSetting('e-weekly',this.checked)"/><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><strong>Urgent Request Emails</strong><span>Email me for critical blood requests matching my type</span></div>
+            <label class="toggle"><input type="checkbox" id="e-urgent" onchange="saveSetting('e-urgent',this.checked)"/><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- DATA PANEL -->
+      <div class="settings-panel" id="panel-data">
+        <div class="settings-section">
+          <h3><i class="fa-solid fa-database" style="color:var(--blue);"></i> Your Data</h3>
+          <p class="desc">All your data is stored locally in your browser. Nothing is sent to any server.</p>
+          <div id="storage-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;"></div>
+          <button class="btn-outline" onclick="exportData()"><i class="fa-solid fa-download"></i> Export My Data (JSON)</button>
+        </div>
+        <div class="settings-section">
+          <h3><i class="fa-solid fa-trash" style="color:#DC2626;"></i> Danger Zone</h3>
+          <p class="desc">These actions are irreversible. Please be sure before proceeding.</p>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:14px;background:#FFF8F8;border-radius:10px;border:1px solid #FEE2E2;">
+              <div><strong style="font-size:.9rem;">Clear My Donations</strong><div style="font-size:.8rem;color:var(--muted);">Delete all donation records</div></div>
+              <button class="danger-btn" onclick="clearDonations()">Clear Donations</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:14px;background:#FFF8F8;border-radius:10px;border:1px solid #FEE2E2;">
+              <div><strong style="font-size:.9rem;">Clear Notifications</strong><div style="font-size:.8rem;color:var(--muted);">Delete all notifications</div></div>
+              <button class="danger-btn" onclick="clearNotifs()">Clear Notifications</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:14px;background:#FFF8F8;border-radius:10px;border:1px solid #FEE2E2;">
+              <div><strong style="font-size:.9rem;color:#DC2626;">Delete Account</strong><div style="font-size:.8rem;color:var(--muted);">Permanently remove all your data</div></div>
+              <button class="danger-btn" onclick="deleteAccount()">Delete Account</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABOUT PANEL -->
+      <div class="settings-panel" id="panel-about">
+        <div class="settings-section" style="text-align:center;padding:40px;">
+          <div style="width:80px;height:80px;background:linear-gradient(135deg,#DC2626,#991B1B);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:2rem;color:white;box-shadow:0 8px 25px rgba(220,38,38,.35);">
+            <i class="fa-solid fa-droplet"></i>
+          </div>
+          <h2 style="font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--red);">Red Hope</h2>
+          <p style="color:var(--muted);margin:8px 0 4px;">Blood Donation Network</p>
+          <span style="background:var(--red-light);color:var(--red);padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:700;">Version 3.0.0</span>
+          <p style="color:var(--muted);font-size:.88rem;line-height:1.6;margin-top:20px;max-width:400px;margin-left:auto;margin-right:auto;">
+            Red Hope connects blood donors with those in urgent need, making it easier to save lives in your community. Built with care for every drop that counts.
+          </p>
+          <div style="margin-top:28px;display:flex;justify-content:center;gap:14px;flex-wrap:wrap;">
+            <div style="background:#FFF8F8;border:1px solid #FEE2E2;border-radius:12px;padding:14px 20px;text-align:center;min-width:100px;">
+              <div style="font-size:1.4rem;font-weight:800;font-family:'Playfair Display',serif;color:var(--red);" id="about-users">0</div>
+              <div style="font-size:.75rem;color:var(--muted);">Registered Users</div>
+            </div>
+            <div style="background:#FFF8F8;border:1px solid #FEE2E2;border-radius:12px;padding:14px 20px;text-align:center;min-width:100px;">
+              <div style="font-size:1.4rem;font-weight:800;font-family:'Playfair Display',serif;color:var(--green);" id="about-donations">0</div>
+              <div style="font-size:.75rem;color:var(--muted);">Donations Logged</div>
+            </div>
+            <div style="background:#FFF8F8;border:1px solid #FEE2E2;border-radius:12px;padding:14px 20px;text-align:center;min-width:100px;">
+              <div style="font-size:1.4rem;font-weight:800;font-family:'Playfair Display',serif;color:var(--gold);" id="about-pts">0</div>
+              <div style="font-size:.75rem;color:var(--muted);">Points Awarded</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- end panels column -->
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('main-content').innerHTML = document.getElementById('page-body').innerHTML;
+  initNotifications();
+  loadSettings();
+  loadStorageStats();
+  loadAboutStats();
+  document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); }));
+});
+
+const DEFAULTS = {
+  'n-urgent':true,'n-messages':true,'n-reminders':true,'n-blood-alerts':true,
+  'n-leaderboard':true,'n-points':true,'n-camps':true,'n-toasts':true,
+  'p-visible':true,'p-show-blood':true,'p-leaderboard':true,'p-messages':true,'p-phone':false,
+  'e-weekly':false,'e-urgent':true,'compact-mode':false,'sidebar-collapsed':false,
+  'font-size':16,'anim-speed':1,'notif-freq':'daily'
+};
+
+function getSettings() { return DB.get('settings_'+user.id) || {}; }
+function saveSettings(s) { DB.set('settings_'+user.id, s); showSaved(); }
+
+function loadSettings() {
+  const s = getSettings();
+  Object.keys(DEFAULTS).forEach(k => {
+    const el = document.getElementById(k);
+    if (!el) return;
+    const val = s[k] !== undefined ? s[k] : DEFAULTS[k];
+    if (el.type === 'checkbox') el.checked = val;
+    else el.value = val;
+  });
+  // Apply theme
+  const savedColor = s['theme-color'];
+  const savedDark = s['theme-dark'];
+  if (savedColor) applyThemeColor(savedColor, savedDark, false);
+  // Mark active swatch
+  if (savedColor) {
+    document.querySelectorAll('.theme-swatch').forEach(sw => {
+      sw.classList.toggle('selected', sw.dataset.color === savedColor);
+    });
+  } else {
+    document.querySelector('.theme-swatch')?.classList.add('selected');
+  }
+  // Font size label
+  const fs = s['font-size'] || 16;
+  const fsEl = document.getElementById('font-size-label');
+  if (fsEl) fsEl.textContent = `${fs < 15 ? 'Small' : fs > 17 ? 'Large' : 'Medium'} (${fs}px)`;
+}
+
+function saveSetting(key, value) {
+  const s = getSettings();
+  s[key] = value;
+  saveSettings(s);
+  if (key === 'font-size') {
+    const fsEl = document.getElementById('font-size-label');
+    if (fsEl) fsEl.textContent = `${value < 15 ? 'Small' : value > 17 ? 'Large' : 'Medium'} (${value}px)`;
+  }
+}
+
+function showPanel(id, el) {
+  document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.s-nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + id)?.classList.add('active');
+  el?.classList.add('active');
+}
+
+function setTheme(color, dark, el) {
+  document.querySelectorAll('.theme-swatch').forEach(s => s.classList.remove('selected'));
+  el?.classList.add('selected');
+  applyThemeColor(color, dark, true);
+  const s = getSettings();
+  s['theme-color'] = color;
+  s['theme-dark'] = dark;
+  saveSettings(s);
+}
+
+function applyThemeColor(color, dark, save) {
+  document.documentElement.style.setProperty('--red', color);
+  document.documentElement.style.setProperty('--red-dark', dark || color);
+  document.documentElement.style.setProperty('--red-light', color + '20');
+  document.documentElement.style.setProperty('--red-mid', color);
+  document.documentElement.style.setProperty('--border', color + '40');
+}
+
+function applyCompact(on) {
+  document.documentElement.style.setProperty('--content-padding', on ? '16px' : '28px');
+}
+
+function applyFontSize(size) {
+  document.documentElement.style.fontSize = size + 'px';
+}
+
+function showSaved() {
+  const el = document.getElementById('save-status');
+  if (!el) return;
+  el.style.display = 'flex';
+  clearTimeout(window._saveTimer);
+  window._saveTimer = setTimeout(() => { el.style.display = 'none'; }, 2000);
+}
+
+function changePassword() {
+  const curr = document.getElementById('pw-current').value;
+  const nw = document.getElementById('pw-new').value;
+  const conf = document.getElementById('pw-confirm').value;
+  const err = document.getElementById('pw-error');
+  const suc = document.getElementById('pw-success');
+  err.style.display = 'none'; suc.style.display = 'none';
+
+  const users = DB.get('users') || [];
+  const u = users.find(x => x.id === user.id);
+  if (!u || u.password !== curr) { err.textContent = 'Current password is incorrect.'; err.style.display = 'block'; return; }
+  if (nw.length < 6) { err.textContent = 'New password must be at least 6 characters.'; err.style.display = 'block'; return; }
+  if (nw !== conf) { err.textContent = 'Passwords do not match.'; err.style.display = 'block'; return; }
+  u.password = nw;
+  DB.set('users', users);
+  suc.textContent = '✅ Password updated successfully!';
+  suc.style.display = 'block';
+  document.getElementById('pw-current').value = '';
+  document.getElementById('pw-new').value = '';
+  document.getElementById('pw-confirm').value = '';
+}
+
+function loadStorageStats() {
+  const donations = (DB.get('donations') || []).filter(d => d.user_id === user.id);
+  const msgs = (DB.get('messages') || []).filter(m => m.from === user.id || m.to === user.id);
+  const notifs = Notif.getAll(user.id);
+  const reqs = (DB.get('urgent_requests') || []).filter(r => r.user_id === user.id);
+  const items = [
+    { label: 'Donations Saved', val: donations.length, color: 'var(--red)' },
+    { label: 'Messages', val: msgs.length, color: 'var(--blue)' },
+    { label: 'Notifications', val: notifs.length, color: 'var(--gold)' },
+    { label: 'My Requests', val: reqs.length, color: 'var(--green)' },
+  ];
+  const el = document.getElementById('storage-stats');
+  if (el) el.innerHTML = items.map(i => `
+    <div style="background:#FFF8F8;border:1px solid #FEE2E2;border-radius:10px;padding:14px;text-align:center;">
+      <div style="font-size:1.5rem;font-weight:800;font-family:'Playfair Display',serif;color:${i.color};">${i.val}</div>
+      <div style="font-size:.75rem;color:var(--muted);margin-top:3px;">${i.label}</div>
+    </div>`).join('');
+}
+
+function loadAboutStats() {
+  const users = DB.get('users') || [];
+  const donations = DB.get('donations') || [];
+  const totalPts = users.reduce((s, u) => s + (u.points || 0), 0);
+  const eu = document.getElementById('about-users');
+  const ed = document.getElementById('about-donations');
+  const ep = document.getElementById('about-pts');
+  if (eu) eu.textContent = users.length;
+  if (ed) ed.textContent = donations.length;
+  if (ep) ep.textContent = totalPts.toLocaleString();
+}
+
+function exportData() {
+  const data = {
+    profile: getCurrentUser(),
+    donations: (DB.get('donations') || []).filter(d => d.user_id === user.id),
+    messages: (DB.get('messages') || []).filter(m => m.from === user.id || m.to === user.id),
+    notifications: Notif.getAll(user.id),
+    settings: getSettings(),
+    exported_at: new Date().toISOString(),
+  };
+  // Remove password
+  if (data.profile) delete data.profile.password;
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `redhope-data-${user.email.split('@')[0]}-${Date.now()}.json`;
+  a.click();
+}
+
+function clearDonations() {
+  if (!confirm('Delete all your donation records? This cannot be undone.')) return;
+  const all = (DB.get('donations') || []).filter(d => d.user_id !== user.id);
+  DB.set('donations', all);
+  loadStorageStats();
+  Notif.push(user.id, 'system', 'Donation records cleared', 'All your donation history has been deleted.', null);
+  alert('✅ Donation records cleared.');
+}
+
+function clearNotifs() {
+  if (!confirm('Clear all your notifications?')) return;
+  Notif.clearAll(user.id);
+  loadStorageStats();
+  alert('✅ Notifications cleared.');
+}
+
+function deleteAccount() {
+  if (!confirm('⚠️ This will permanently delete your account and all data. Are you absolutely sure?')) return;
+  if (!confirm('Last chance — this cannot be undone. Delete account?')) return;
+  const users = (DB.get('users') || []).filter(u => u.id !== user.id);
+  DB.set('users', users);
+  const donations = (DB.get('donations') || []).filter(d => d.user_id !== user.id);
+  DB.set('donations', donations);
+  const msgs = (DB.get('messages') || []).filter(m => m.from !== user.id && m.to !== user.id);
+  DB.set('messages', msgs);
+  const reqs = (DB.get('urgent_requests') || []).filter(r => r.user_id !== user.id);
+  DB.set('urgent_requests', reqs);
+  DB.del('notifs_' + user.id);
+  DB.del('settings_' + user.id);
+  DB.del('session');
+  window.location.href = 'index.html';
+}
+</script>
+</body>
+</html>

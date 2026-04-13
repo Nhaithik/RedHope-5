@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Submit Review | Red Hope</title>
+<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+<script src="shared.js"></script>
+<script src="notifications.js"></script>
+<script src="layout.js"></script>
+<script>const user = renderLayout('Submit Review', 'submit_review.html');</script>
+
+<div id="page-body" style="display:none;">
+  <div class="top-header">
+    <div><h1>Submit a Review</h1><p>Rate your experience at the location.</p></div>
+    <a href="map_view.html" class="btn-outline"><i class="fa-solid fa-arrow-left"></i> Back to Map</a>
+  </div>
+  <div class="glass-card" style="max-width:580px;margin:0 auto;">
+    <div id="rev-success" class="success-msg"></div>
+    <div class="form-group">
+      <label>Location Type</label>
+      <select id="loc-type"><option value="blood_bank">Blood Bank</option><option value="camp">Donation Camp</option></select>
+    </div>
+    <div class="form-group">
+      <label>Location Name</label>
+      <input type="text" id="loc-name" placeholder="e.g. City Blood Bank"/>
+    </div>
+    <div class="form-group">
+      <label>Rating (1–5 stars)</label>
+      <div style="display:flex;align-items:center;gap:16px;background:#FFF8F8;padding:14px;border-radius:10px;border:1px solid var(--border);">
+        <input type="range" id="rating" min="1" max="5" value="5" oninput="document.getElementById('rat-val').textContent=this.value" style="flex:1;accent-color:var(--gold);"/>
+        <span id="rat-val" style="font-size:1.5rem;font-weight:700;color:var(--gold);min-width:24px;">5</span>
+        <i class="fa-solid fa-star" style="color:var(--gold);font-size:1.1rem;"></i>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Your Experience</label>
+      <textarea id="review-text" style="height:90px;resize:vertical;" placeholder="Share your experience here (optional)..."></textarea>
+    </div>
+    <button class="btn-primary" onclick="submitReview()"><i class="fa-solid fa-paper-plane"></i> Submit Review</button>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('main-content').innerHTML = document.getElementById('page-body').innerHTML;
+  initNotifications();
+  // Pre-fill from URL params
+  const p = new URLSearchParams(window.location.search);
+  if(p.get('type')) document.getElementById('loc-type').value = p.get('type');
+});
+
+function submitReview(){
+  const loc = document.getElementById('loc-name').value.trim();
+  if(!loc){alert('Please enter a location name.');return;}
+  const reviews = DB.get('reviews')||[];
+  reviews.push({id:Date.now(),user_id:user.id,loc_type:document.getElementById('loc-type').value,loc_name:loc,rating:parseInt(document.getElementById('rating').value),text:document.getElementById('review-text').value.trim(),ts:Date.now()});
+  DB.set('reviews',reviews);
+  const suc=document.getElementById('rev-success');
+  suc.textContent='✅ Thank you! Your review has been submitted.';
+  suc.style.display='block';
+  document.getElementById('loc-name').value='';
+  document.getElementById('review-text').value='';
+  document.getElementById('rating').value=5;
+  document.getElementById('rat-val').textContent='5';
+}
+</script>
+</body>
+</html>

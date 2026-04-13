@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Donation Map | Red Hope</title>
+<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+#map{height:62vh;width:100%;border-radius:14px;}
+#map-loading{display:none;position:absolute;inset:0;background:rgba(255,255,255,.8);border-radius:14px;align-items:center;justify-content:center;flex-direction:column;z-index:999;}
+</style>
+</head>
+<body>
+<script src="shared.js"></script>
+<script src="notifications.js"></script>
+<script src="layout.js"></script>
+<script>const user = renderLayout('Donation Map', 'map_view.html');</script>
+
+<div id="page-body" style="display:none;">
+  <div class="top-header">
+    <div><h1>Donation Map</h1><p>Find nearby blood banks, donation camps, and available donors.</p></div>
+    <button class="btn-sm" style="background:var(--red);color:white;padding:10px 18px;" onclick="locateUser()">
+      <i class="fa-solid fa-location-crosshairs"></i> Locate Me
+    </button>
+  </div>
+
+  <div class="glass-card" style="margin-bottom:16px;">
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center;">
+      <label class="checkbox-label"><input type="checkbox" id="show-banks" checked onchange="loadMarkers()"/><span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;background:#DC2626;border-radius:50%;display:inline-block;"></span>Blood Banks</span></label>
+      <label class="checkbox-label"><input type="checkbox" id="show-camps" checked onchange="loadMarkers()"/><span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;background:#10B981;border-radius:50%;display:inline-block;"></span>Donation Camps</span></label>
+      <label class="checkbox-label"><input type="checkbox" id="show-donors" checked onchange="loadMarkers()"/><span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;background:#3B82F6;border-radius:50%;display:inline-block;"></span>Donors</span></label>
+    </div>
+  </div>
+
+  <div class="glass-card" style="padding:10px;position:relative;">
+    <div id="map-loading"><i class="fa-solid fa-spinner fa-spin" style="font-size:2.5rem;color:var(--red);"></i><p style="margin-top:14px;font-weight:600;">Finding your location...</p></div>
+    <div id="map"></div>
+  </div>
+
+  <div class="glass-card" style="margin-top:16px;">
+    <div class="section-title"><i class="fa-solid fa-circle-info" style="color:var(--red);"></i> Map Legend</div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:.88rem;">
+      <span><span style="display:inline-block;width:12px;height:12px;background:#DC2626;border-radius:50%;margin-right:6px;"></span>Blood Banks</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:#10B981;border-radius:50%;margin-right:6px;"></span>Donation Camps</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:#3B82F6;border-radius:50%;margin-right:6px;"></span>Available Donors</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:#F59E0B;border-radius:50%;margin-right:6px;"></span>Your Location</span>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+let mapInst=null, markersLayer=null, userMarker=null;
+let mapData={
+  bloodBanks:[
+    {name:'Central Reserve Bank',lat:20.296,lng:85.824,groups:['A+','B+','O-']},
+    {name:'Hope Blood Center',lat:20.314,lng:85.840,groups:['O+','AB+','A-']},
+    {name:'LifeLine Blood Bank',lat:19.076,lng:72.877,groups:['B-','A+','O+']},
+    {name:'City Blood Center',lat:28.679,lng:77.069,groups:['O-','AB+']},
+  ],
+  camps:[
+    {name:'Community Drive 2026',lat:20.305,lng:85.826,date:'This Sunday'},
+    {name:'Weekend Camp',lat:19.090,lng:72.860,date:'Next Friday'},
+  ],
+  donors:[
+    {name:'James Smith',lat:20.300,lng:85.820,blood:'A+'},
+    {name:'Maria Garcia',lat:19.080,lng:72.870,blood:'O-'},
+    {name:'David Chen',lat:28.670,lng:77.080,blood:'B+'},
+  ]
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('main-content').innerHTML = document.getElementById('page-body').innerHTML;
+  initNotifications();
+  setTimeout(initMap, 100);
+});
+
+function initMap(){
+  if(mapInst) return;
+  mapInst = L.map('map').setView([20.5937, 78.9629], 5);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap contributors © CARTO',maxZoom:19}).addTo(mapInst);
+  markersLayer = L.layerGroup().addTo(mapInst);
+  loadMarkers();
+  const lc = document.querySelector('.leaflet-container');
+  if(lc) lc.style.borderRadius='14px';
+}
+
+function mkIcon(color, pulse=false){
+  return L.divIcon({className:'',html:`<div style="background:${color};width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 6px rgba(0,0,0,.35);${pulse?'animation:pulse 2s infinite':''}"></div>`,iconSize:[14,14],iconAnchor:[7,7],popupAnchor:[0,-8]});
+}
+
+function loadMarkers(){
+  if(!markersLayer) return;
+  markersLayer.clearLayers();
+  if(document.getElementById('show-banks')?.checked){
+    mapData.bloodBanks.forEach(b=>L.marker([b.lat,b.lng],{icon:mkIcon('#DC2626')})
+      .bindPopup(`<div style="font-family:'DM Sans',sans-serif;padding:4px;"><strong>${b.name}</strong><br>Groups: <span style="color:#DC2626;font-weight:700;">${b.groups.join(', ')}</span><br><a href="submit_review.html?type=blood_bank" style="color:#3B82F6;font-size:.85rem;">Leave a Review →</a></div>`)
+      .addTo(markersLayer));
+  }
+  if(document.getElementById('show-camps')?.checked){
+    mapData.camps.forEach(c=>L.marker([c.lat,c.lng],{icon:mkIcon('#10B981')})
+      .bindPopup(`<div style="font-family:'DM Sans',sans-serif;padding:4px;"><strong style="color:#10B981;">${c.name}</strong><br>Date: ${c.date}</div>`)
+      .addTo(markersLayer));
+  }
+  if(document.getElementById('show-donors')?.checked){
+    mapData.donors.forEach(d=>L.marker([d.lat,d.lng],{icon:mkIcon('#3B82F6')})
+      .bindPopup(`<div style="font-family:'DM Sans',sans-serif;padding:4px;"><strong>${d.name}</strong><br>Blood: <span style="color:#3B82F6;font-weight:700;">${d.blood}</span></div>`)
+      .addTo(markersLayer));
+  }
+}
+
+function locateUser(){
+  if(!navigator.geolocation){alert('Geolocation is not supported by your browser.');return;}
+  document.getElementById('map-loading').style.display='flex';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const {latitude:lat,longitude:lng}=pos.coords;
+    document.getElementById('map-loading').style.display='none';
+    mapInst.setView([lat,lng],13);
+    if(userMarker) mapInst.removeLayer(userMarker);
+    userMarker=L.marker([lat,lng],{icon:mkIcon('#F59E0B',true),zIndexOffset:1000}).bindPopup('<strong>You are here!</strong>').addTo(mapInst).openPopup();
+    const off=()=>(Math.random()-.5)*.12;
+    mapData.bloodBanks=[{name:'Nearby Blood Bank',lat:lat+off(),lng:lng+off(),groups:['O+','A+']},{name:'Community Center',lat:lat+off(),lng:lng+off(),groups:['B+','AB-']}];
+    mapData.camps=[{name:'Weekend Donation Drive',lat:lat+off(),lng:lng+off(),date:'This Weekend'}];
+    mapData.donors=[{name:'Local Donor 1',lat:lat+off(),lng:lng+off(),blood:'A+'},{name:'Local Donor 2',lat:lat+off(),lng:lng+off(),blood:'O-'}];
+    loadMarkers();
+  },()=>{document.getElementById('map-loading').style.display='none';alert('Unable to get your location. Please check browser permissions.');},{enableHighAccuracy:true,timeout:10000});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>My Profile | Red Hope</title>
+<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+<script src="shared.js"></script>
+<script src="notifications.js"></script>
+<script src="layout.js"></script>
+<script>const user = renderLayout('My Profile', 'profile.html');</script>
+
+<div id="page-body" style="display:none;">
+  <div class="top-header">
+    <div><h1>My Profile</h1><p>View and manage your personal donation settings.</p></div>
+    <button class="btn-sm" style="background:var(--red);color:white;padding:10px 18px;" onclick="openModal('edit-modal')">
+      <i class="fa-solid fa-pen"></i> Edit Profile
+    </button>
+  </div>
+
+  <!-- Personal Info -->
+  <div class="glass-card">
+    <h3 style="color:var(--red);font-family:'Playfair Display',serif;border-bottom:1px solid #FEE2E2;padding-bottom:12px;margin-bottom:18px;"><i class="fa-solid fa-address-card"></i> Personal Information</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:18px;" id="profile-info"></div>
+  </div>
+
+  <!-- Medical Details -->
+  <div class="glass-card">
+    <h3 style="color:var(--blue);font-family:'Playfair Display',serif;border-bottom:1px solid #FEE2E2;padding-bottom:12px;margin-bottom:18px;"><i class="fa-solid fa-notes-medical"></i> Medical Details</h3>
+    <div style="display:flex;gap:30px;margin-bottom:18px;flex-wrap:wrap;" id="profile-avail"></div>
+    <div style="display:grid;gap:12px;" id="profile-medical"></div>
+  </div>
+
+  <!-- Account Stats -->
+  <div class="glass-card">
+    <h3 style="color:#8B5CF6;font-family:'Playfair Display',serif;border-bottom:1px solid #FEE2E2;padding-bottom:12px;margin-bottom:18px;"><i class="fa-solid fa-chart-bar"></i> My Stats</h3>
+    <div class="stat-grid" id="profile-stats"></div>
+  </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal-box" style="max-width:560px;">
+    <button class="modal-close" onclick="closeModal('edit-modal')">×</button>
+    <h3 style="font-family:'Playfair Display',serif;color:var(--red);margin-bottom:20px;">Edit Profile</h3>
+    <div id="edit-success" class="success-msg"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Phone</label><input type="text" id="ep-phone"/></div>
+      <div class="form-group"><label>Age</label><input type="number" id="ep-age" min="18"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Gender</label>
+        <select id="ep-gender"><option>Male</option><option>Female</option><option>Other</option></select>
+      </div>
+      <div class="form-group"><label>Blood Group</label>
+        <select id="ep-blood"><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
+      </div>
+    </div>
+    <div class="checkbox-row">
+      <label class="checkbox-label"><input type="checkbox" id="ep-avail-blood"/> Available for Blood Donation</label>
+      <label class="checkbox-label"><input type="checkbox" id="ep-avail-organ"/> Available for Organ Donation (pledge)</label>
+    </div>
+    <div class="form-group"><label>Medical History</label><textarea id="ep-medical" style="height:70px;resize:vertical;"></textarea></div>
+    <div class="form-group"><label>Allergies</label><input type="text" id="ep-allergies" placeholder="e.g. Penicillin, Latex"/></div>
+    <button class="btn-primary" onclick="saveProfile()"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('main-content').innerHTML = document.getElementById('page-body').innerHTML;
+  initNotifications();
+  loadProfile();
+  document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+});
+
+function loadProfile(){
+  // Personal info
+  const pi = document.getElementById('profile-info');
+  if(pi) pi.innerHTML=[
+    {l:'Email',v:user.email},
+    {l:'Phone',v:user.phone||'Not set'},
+    {l:'Age',v:user.age||'Not set'},
+    {l:'Gender',v:user.gender||'Not set'},
+    {l:'Blood Group',v:`<span style="color:var(--red);font-weight:800;font-size:1.1rem;">${user.blood_group||'N/A'}</span>`},
+    {l:'Points',v:`<span style="color:var(--gold);font-weight:700;">★ ${(user.points||0).toLocaleString()}</span>`},
+  ].map(i=>`<div><strong style="display:block;color:var(--muted);font-size:.78rem;margin-bottom:3px;">${i.l}</strong><span style="font-weight:600;">${i.v}</span></div>`).join('');
+
+  // Availability
+  const pa = document.getElementById('profile-avail');
+  if(pa) pa.innerHTML=[
+    {l:'Blood Donation',v:user.available_blood,c:'var(--green)'},
+    {l:'Organ Pledge',v:user.available_organ,c:'#8B5CF6'},
+  ].map(i=>`<div><strong style="display:block;color:var(--muted);font-size:.78rem;margin-bottom:3px;">${i.l}</strong><span style="font-weight:700;color:${i.v?i.c:'var(--muted)'}"><i class="fa-solid ${i.v?'fa-check':'fa-xmark'}"></i> ${i.v?'Available':'Not Available'}</span></div>`).join('');
+
+  // Medical
+  const pm = document.getElementById('profile-medical');
+  if(pm) pm.innerHTML=[
+    {l:'Medical History',v:user.medical||'None provided'},
+    {l:'Allergies',v:user.allergies||'None provided'},
+  ].map(i=>`<div style="background:#FFF8F8;padding:12px 16px;border-radius:10px;border:1px solid #FEE2E2;"><strong style="display:block;margin-bottom:4px;font-size:.88rem;">${i.l}</strong><span style="font-size:.9rem;color:var(--muted);">${i.v}</span></div>`).join('');
+
+  // Stats
+  const donations = (DB.get('donations')||[]).filter(d=>d.user_id===user.id);
+  const units = donations.filter(d=>d.type!=='organ').reduce((s,d)=>s+(parseInt(d.units)||1),0);
+  const ps = document.getElementById('profile-stats');
+  if(ps) ps.innerHTML=[
+    {v:donations.length,l:'Total Donations',c:'var(--red)'},
+    {v:units,l:'Blood Units Donated',c:'var(--blue)'},
+    {v:donations.filter(d=>d.type==='organ').length,l:'Organ Pledges',c:'#8B5CF6'},
+    {v:(user.streak||0),l:'Day Streak 🔥',c:'var(--gold)'},
+  ].map(s=>`<div class="stat-card"><div class="val" style="color:${s.c};">${s.v}</div><div class="lbl">${s.l}</div></div>`).join('');
+}
+
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+  // Pre-fill form
+  document.getElementById('ep-phone').value=user.phone||'';
+  document.getElementById('ep-age').value=user.age||'';
+  document.getElementById('ep-gender').value=user.gender||'Male';
+  document.getElementById('ep-blood').value=user.blood_group||'O+';
+  document.getElementById('ep-avail-blood').checked=!!user.available_blood;
+  document.getElementById('ep-avail-organ').checked=!!user.available_organ;
+  document.getElementById('ep-medical').value=user.medical||'';
+  document.getElementById('ep-allergies').value=user.allergies||'';
+}
+
+function saveProfile(){
+  const users=DB.get('users')||[];
+  const idx=users.findIndex(u=>u.id===user.id);
+  if(idx<0) return;
+  users[idx].phone=document.getElementById('ep-phone').value.trim();
+  users[idx].age=parseInt(document.getElementById('ep-age').value)||user.age;
+  users[idx].gender=document.getElementById('ep-gender').value;
+  users[idx].blood_group=document.getElementById('ep-blood').value;
+  users[idx].available_blood=document.getElementById('ep-avail-blood').checked;
+  users[idx].available_organ=document.getElementById('ep-avail-organ').checked;
+  users[idx].medical=document.getElementById('ep-medical').value.trim();
+  users[idx].allergies=document.getElementById('ep-allergies').value.trim();
+  DB.set('users',users);
+  const suc=document.getElementById('edit-success');
+  suc.textContent='✅ Profile updated successfully!';
+  suc.style.display='block';
+  setTimeout(()=>{closeModal('edit-modal');window.location.reload();},1200);
+}
+</script>
+</body>
+</html>

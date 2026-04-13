@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Register | Red Hope</title>
+<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="auth-card wide">
+    <div class="auth-logo">
+      <div class="logo-icon"><i class="fa-solid fa-droplet"></i></div>
+      <h1>Join Red Hope</h1>
+      <p>Create your profile and start saving lives</p>
+    </div>
+    <div id="reg-error" class="error-msg"></div>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email"/>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="text" id="reg-phone" placeholder="9876543210"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="reg-pass" placeholder="min 6 characters"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Age</label>
+        <input type="number" id="reg-age" min="18" max="100" placeholder="18+"/>
+      </div>
+      <div class="form-group">
+        <label>Gender</label>
+        <select id="reg-gender">
+          <option value="">--Select--</option>
+          <option>Male</option><option>Female</option><option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Blood Group</label>
+      <select id="reg-blood">
+        <option value="">--Select blood type--</option>
+        <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+        <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+      </select>
+    </div>
+    <div class="checkbox-row">
+      <label class="checkbox-label">
+        <input type="checkbox" id="reg-avail-blood"/> I am available for Blood Donation
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="reg-avail-organ"/> I am available for Organ Donation (post-mortem pledge)
+      </label>
+    </div>
+    <button class="btn-primary" onclick="doRegister()"><i class="fa-solid fa-heart"></i> Create Account</button>
+    <div class="auth-switch">Already have an account? <a href="login.html">Login here</a></div>
+    <div class="auth-switch" style="margin-top:8px;"><a href="index.html"><i class="fa-solid fa-arrow-left"></i> Back to Home</a></div>
+  </div>
+</div>
+<script src="shared.js"></script>
+<script>
+initDB();
+if(getCurrentUser()) window.location.href='dashboard.html';
+
+function doRegister(){
+  const email=document.getElementById('reg-email').value.trim();
+  const phone=document.getElementById('reg-phone').value.trim();
+  const pass=document.getElementById('reg-pass').value;
+  const age=parseInt(document.getElementById('reg-age').value);
+  const gender=document.getElementById('reg-gender').value;
+  const blood=document.getElementById('reg-blood').value;
+  const err=document.getElementById('reg-error');
+  err.style.display='none';
+  if(!email||!phone||!pass||!age||!gender||!blood){err.textContent='All fields are required.';err.style.display='block';return;}
+  if(age<18){err.textContent='Minimum age is 18.';err.style.display='block';return;}
+  if(pass.length<6){err.textContent='Password must be at least 6 characters.';err.style.display='block';return;}
+  const users=DB.get('users')||[];
+  if(users.find(u=>u.email===email)){err.textContent='Email already registered.';err.style.display='block';return;}
+  const uid=DB.get('next_uid')||2;
+  users.push({id:uid,email,password:pass,phone,age,gender,blood_group:blood,
+    available_blood:document.getElementById('reg-avail-blood').checked,
+    available_organ:document.getElementById('reg-avail-organ').checked,
+    points:0,streak:0,medical:'',allergies:''});
+  DB.set('users',users);
+  DB.set('next_uid',uid+1);
+  DB.set('session',uid);
+  // Send welcome notification
+  const wKey = 'rh_notifs_'+uid;
+  const wNotif = {id:Date.now(),uid:uid,type:'welcome',title:'Welcome to Red Hope! 👋',body:'Complete your profile and log your first donation to earn 500 points.',link:'profile.html',read:false,ts:Date.now()};
+  try { const arr=JSON.parse(localStorage.getItem(wKey)||'[]'); arr.unshift(wNotif); localStorage.setItem(wKey,JSON.stringify(arr)); } catch(e){}
+  window.location.href='dashboard.html';
+}
+</script>
+</body>
+</html>

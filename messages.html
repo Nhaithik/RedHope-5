@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Messages | Red Hope</title>
+<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+<script src="shared.js"></script>
+<script src="notifications.js"></script>
+<script src="layout.js"></script>
+<script>const user = renderLayout('Messages', 'messages.html');</script>
+
+<div id="page-body" style="display:none;">
+  <div class="top-header">
+    <div><h1><i class="fa-solid fa-comments" style="color:var(--red);"></i> Messages</h1><p>Securely connect with donors and recipients.</p></div>
+  </div>
+  <div class="msgs-layout">
+    <div class="convo-list">
+      <div style="padding:14px 16px;font-weight:600;border-bottom:1px solid #FEE2E2;font-size:.9rem;"><i class="fa-solid fa-inbox"></i> Conversations</div>
+      <div id="convo-items"></div>
+    </div>
+    <div class="chat-panel" id="chat-panel">
+      <div style="display:flex;align-items:center;justify-content:center;flex:1;flex-direction:column;color:var(--muted);padding:30px;text-align:center;">
+        <i class="fa-solid fa-comment-dots" style="font-size:3rem;opacity:.2;color:var(--red);"></i>
+        <h3 style="margin-top:16px;font-family:'Playfair Display',serif;">Select a conversation</h3>
+        <p style="margin-top:8px;font-size:.88rem;">Or click "I Can Help" on an urgent request to start chatting!</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let activePid = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('main-content').innerHTML = document.getElementById('page-body').innerHTML;
+  initNotifications();
+  // Check if URL has ?to= param
+  const params = new URLSearchParams(window.location.search);
+  const toId = params.get('to') ? parseInt(params.get('to')) : null;
+  loadConvos(toId);
+});
+
+function loadConvos(autoOpenId){
+  const msgs = DB.get('messages')||[];
+  const users = DB.get('users')||[];
+  const partners = new Set();
+  msgs.forEach(m=>{
+    if(m.from===user.id) partners.add(m.to);
+    if(m.to===user.id) partners.add(m.from);
+  });
+  if(autoOpenId) partners.add(autoOpenId);
+
+  const ci = document.getElementById('convo-items');
+  if(!ci) return;
+
+  if(!partners.size){
+    ci.innerHTML='<div style="padding:20px;color:var(--muted);font-size:.85rem;text-align:center;line-height:1.5;">No conversations yet.<br>Click "I Can Help" on an urgent request to start one!</div>';
+  } else {
+    ci.innerHTML=[...partners].map(pid=>{
+      const partner=users.find(u=>u.id===pid);
+      if(!partner) return '';
+      const name=partner.email.split('@')[0];
+      const pMsgs=msgs.filter(m=>(m.from===user.id&&m.to===pid)||(m.from===pid&&m.to===user.id));
+      const last=pMsgs[pMsgs.length-1];
+      const unread=pMsgs.filter(m=>m.to===user.id&&!m.read).length;
+      return `<div class="convo-item ${activePid===pid?'active':''}" onclick="openChat(${pid})">
+        <div class="convo-avatar">${name[0].toUpperCase()}</div>
+        <div style="flex:1;overflow:hidden;">
+          <div style="font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;align-items:center;">
+            ${name}
+            ${unread?`<span style="background:var(--red);color:white;font-size:.7rem;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;">${unread}</span>`:''}
+          </div>
+          <div style="font-size:.78rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${last?last.text.substring(0,32)+'...':'Start a conversation'}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  if(autoOpenId) setTimeout(()=>openChat(autoOpenId),100);
+}
+
+function openChat(pid){
+  activePid=pid;
+  const users=DB.get('users')||[];
+  const partner=users.find(u=>u.id===pid);
+  if(!partner) return;
+  const name=partner.email.split('@')[0];
+  // Mark as read
+  const msgs=DB.get('messages')||[];
+  msgs.forEach(m=>{if(m.from===pid&&m.to===user.id)m.read=true;});
+  DB.set('messages',msgs);
+  const convoMsgs=msgs.filter(m=>(m.from===user.id&&m.to===pid)||(m.from===pid&&m.to===user.id));
+  const panel=document.getElementById('chat-panel');
+  panel.innerHTML=`
+    <div style="padding:14px 18px;border-bottom:1px solid #FEE2E2;display:flex;align-items:center;gap:12px;">
+      <div class="convo-avatar">${name[0].toUpperCase()}</div>
+      <div><div style="font-weight:600;">${name}</div><div style="font-size:.78rem;color:var(--green);">● Active Donor</div></div>
+    </div>
+    <div class="chat-msgs" id="chat-msgs">
+      ${!convoMsgs.length?`<div style="margin:auto;text-align:center;color:var(--muted);"><i class="fa-solid fa-hand-holding-heart" style="font-size:2rem;opacity:.3;color:var(--red);"></i><p style="margin-top:10px;font-size:.88rem;font-style:italic;">Say hello! Discuss donation details here.</p></div>`
+      :convoMsgs.map(m=>`<div style="display:flex;flex-direction:column;align-items:${m.from===user.id?'flex-end':'flex-start'};">
+        <div class="bubble ${m.from===user.id?'sent':'recv'}">${m.text}
+          <span style="font-size:.68rem;opacity:.65;display:block;margin-top:3px;text-align:right;">${new Date(m.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
+        </div>
+      </div>`).join('')}
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chat-txt" placeholder="Type a message..." onkeypress="if(event.key==='Enter')sendChat()"/>
+      <button class="chat-send" onclick="sendChat()"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>`;
+  setTimeout(()=>{const el=document.getElementById('chat-msgs');if(el)el.scrollTop=el.scrollHeight;},50);
+  loadConvos(null);
+}
+
+function sendChat(){
+  const txt=document.getElementById('chat-txt')?.value.trim();
+  if(!txt||!activePid) return;
+  const msgs=DB.get('messages')||[];
+  msgs.push({id:Date.now(),from:user.id,to:activePid,text:txt,ts:Date.now(),read:false});
+  notifyNewMessage(activePid, user.email.split('@')[0]);
+  DB.set('messages',msgs);
+  document.getElementById('chat-txt').value='';
+  openChat(activePid);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Dashboard | Red Hope</title>
+<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.countdown-card{background:linear-gradient(135deg,#DC2626,#991B1B);border-radius:16px;padding:22px;color:white;position:relative;overflow:hidden;}
+.countdown-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,.08);border-radius:50%;}
+.countdown-card::after{content:'';position:absolute;bottom:-20px;left:20px;width:80px;height:80px;background:rgba(255,255,255,.05);border-radius:50%;}
+.cd-days{font-size:3rem;font-weight:900;font-family:'Playfair Display',serif;line-height:1;}
+.streak-fire{font-size:2.5rem;line-height:1;margin-bottom:4px;}
+.impact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;}
+.impact-card{background:white;border-radius:12px;padding:16px;text-align:center;border:1px solid #FEE2E2;}
+.impact-val{font-size:1.6rem;font-weight:800;font-family:'Playfair Display',serif;}
+.impact-lbl{font-size:.75rem;color:var(--muted);margin-top:4px;}
+.next-steps{display:flex;flex-direction:column;gap:10px;}
+.step-item{display:flex;align-items:center;gap:14px;padding:13px 16px;border-radius:12px;border:1px solid #FEE2E2;background:white;}
+.step-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0;}
+.progress-ring{transform:rotate(-90deg);}
+.recent-activity{display:flex;flex-direction:column;gap:8px;}
+.activity-item{display:flex;align-items:center;gap:12px;padding:11px 14px;background:#FFF8F8;border-radius:10px;font-size:.85rem;}
+</style>
+</head>
+<body>
+<script src="shared.js"></script>
+<script src="notifications.js"></script>
+<script src="layout.js"></script>
+<script>const user = renderLayout('Dashboard', 'dashboard.html');</script>
+
+<div id="page-body" style="display:none;">
+
+  <!-- Urgent Banner -->
+  <div id="urgent-banner" class="urgent-banner" style="display:none;">
+    <div style="font-size:1.8rem;">⚠️</div>
+    <div style="flex:1;">
+      <strong id="banner-urgency" style="font-size:.75rem;letter-spacing:1px;text-transform:uppercase;"></strong>
+      <div id="banner-text" style="font-weight:600;margin:2px 0;font-size:1rem;"></div>
+      <div style="font-size:.82rem;color:var(--muted);">Can you help? View all urgent requests.</div>
+    </div>
+    <a href="urgent_requests.html" class="btn-sm" style="background:var(--red);color:white;">View All</a>
+  </div>
+
+  <!-- Top stats row -->
+  <div class="stat-grid">
+    <div class="stat-card" style="border-top:3px solid var(--red);">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div class="val" id="dash-blood-type" style="color:var(--red);">N/A</div><div class="lbl">My Blood Type</div></div>
+        <div style="width:42px;height:42px;background:var(--red-light);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--red);font-size:1.1rem;"><i class="fa-solid fa-droplet"></i></div>
+      </div>
+    </div>
+    <div class="stat-card" style="border-top:3px solid var(--gold);">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div class="val" id="dash-points" style="color:var(--gold);">0</div><div class="lbl">Reward Points</div></div>
+        <div style="width:42px;height:42px;background:#FEF3C7;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:1.1rem;"><i class="fa-solid fa-star"></i></div>
+      </div>
+    </div>
+    <div class="stat-card" style="border-top:3px solid var(--green);">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div class="val" id="dash-donations" style="color:var(--green);">0</div><div class="lbl">Total Donations</div></div>
+        <div style="width:42px;height:42px;background:#D1FAE5;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--green);font-size:1.1rem;"><i class="fa-solid fa-heart"></i></div>
+      </div>
+    </div>
+    <div class="stat-card" style="border-top:3px solid var(--blue);">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div class="val" id="dash-rank" style="color:var(--blue);">#-</div><div class="lbl">Leaderboard Rank</div></div>
+        <div style="width:42px;height:42px;background:#DBEAFE;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--blue);font-size:1.1rem;"><i class="fa-solid fa-trophy"></i></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: Countdown + Streak + Impact -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:16px;margin-bottom:20px;" id="mid-row">
+    <!-- Next donation countdown -->
+    <div class="countdown-card">
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;opacity:.75;margin-bottom:8px;"><i class="fa-solid fa-clock"></i> Next Eligible In</div>
+      <div class="cd-days" id="cd-days">--</div>
+      <div style="font-size:.82rem;opacity:.8;margin-top:4px;" id="cd-label">days</div>
+      <div style="font-size:.75rem;opacity:.6;margin-top:8px;" id="cd-date"></div>
+    </div>
+    <!-- Streak card -->
+    <div class="stat-card" style="border-top:3px solid #F97316;display:flex;flex-direction:column;justify-content:center;">
+      <div class="streak-fire" id="streak-emoji">🔥</div>
+      <div class="val" id="dash-streak" style="color:#F97316;">0</div>
+      <div class="lbl">Day Streak</div>
+      <div style="font-size:.75rem;color:var(--muted);margin-top:6px;" id="streak-msg"></div>
+    </div>
+    <!-- Impact summary -->
+    <div class="glass-card" style="margin:0;">
+      <div class="section-title" style="font-size:1rem;"><i class="fa-solid fa-heart-pulse" style="color:var(--red);"></i> Your Impact</div>
+      <div class="impact-grid" id="impact-grid"></div>
+    </div>
+  </div>
+
+  <!-- Chart + Activity row -->
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:20px;">
+    <div class="glass-card" style="margin:0;">
+      <div class="section-title">Donation Activity (This Year)</div>
+      <canvas id="donationChart" height="90"></canvas>
+    </div>
+    <div class="glass-card" style="margin:0;">
+      <div class="section-title" style="font-size:1rem;"><i class="fa-solid fa-bolt" style="color:var(--gold);"></i> Recent Activity</div>
+      <div class="recent-activity" id="recent-activity"></div>
+    </div>
+  </div>
+
+  <!-- Quick actions -->
+  <div class="glass-card">
+    <div class="section-title">Quick Actions</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <button class="btn-sm" style="background:var(--red);color:white;padding:10px 18px;" onclick="openModal('log-modal')"><i class="fa-solid fa-plus"></i> Log a Donation</button>
+      <a href="donor_search.html" class="btn-sm" style="background:var(--red-light);color:var(--red-dark);padding:10px 18px;text-decoration:none;"><i class="fa-solid fa-magnifying-glass"></i> Find Donors</a>
+      <a href="urgent_requests.html" class="btn-sm" style="background:#FEF3C7;color:#92400E;padding:10px 18px;text-decoration:none;"><i class="fa-solid fa-triangle-exclamation"></i> Urgent Requests</a>
+      <a href="blood_availability.html" class="btn-sm" style="background:#D1FAE5;color:#065F46;padding:10px 18px;text-decoration:none;"><i class="fa-solid fa-droplet"></i> Blood Availability</a>
+      <a href="donation_camps.html" class="btn-sm" style="background:#EDE9FE;color:#5B21B6;padding:10px 18px;text-decoration:none;"><i class="fa-solid fa-campground"></i> Donation Camps</a>
+    </div>
+  </div>
+
+  <!-- Next steps for new users -->
+  <div class="glass-card" id="next-steps-card" style="display:none;">
+    <div class="section-title"><i class="fa-solid fa-map-signs" style="color:var(--red);"></i> Getting Started</div>
+    <div class="next-steps" id="next-steps-list"></div>
+  </div>
+</div>
+
+<!-- Log Donation Modal -->
+<div class="modal-overlay" id="log-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('log-modal')">×</button>
+    <h3 style="font-family:'Playfair Display',serif;color:var(--red);margin-bottom:5px;"><i class="fa-solid fa-heart"></i> Log a Donation</h3>
+    <p style="color:var(--muted);font-size:.88rem;margin-bottom:20px;">Record your donation and earn +500 points!</p>
+    <div class="form-row">
+      <div class="form-group"><label>Donation Type</label>
+        <select id="log-type" onchange="document.getElementById('organ-div').style.display=this.value==='organ'?'block':'none'">
+          <option value="blood">🩸 Blood</option><option value="organ">🩺 Organ Pledge</option><option value="platelet">🟡 Platelet</option><option value="plasma">💙 Plasma</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Blood Group</label>
+        <select id="log-bg"><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
+      </div>
+    </div>
+    <div class="form-group" id="organ-div" style="display:none;"><label>Organ Donated</label><input type="text" id="log-organ" placeholder="e.g. Kidney, Liver"/></div>
+    <div class="form-row">
+      <div class="form-group"><label>Location / Hospital</label><input type="text" id="log-loc" placeholder="City Medical Center"/></div>
+      <div class="form-group"><label>Units</label><input type="number" id="log-units" value="1" min="1" max="10"/></div>
+    </div>
+    <div class="form-group"><label>Date</label><input type="date" id="log-date"/></div>
+    <div class="form-group"><label>Notes (optional)</label><input type="text" id="log-notes" placeholder="Any notes..."/></div>
+    <div style="background:#D1FAE5;border:1px solid #6EE7B7;padding:10px 14px;border-radius:8px;font-size:.88rem;color:#065F46;margin-bottom:16px;"><i class="fa-solid fa-star"></i> You'll earn <strong>+500 points</strong>!</div>
+    <button class="btn-primary" onclick="logDonation()"><i class="fa-solid fa-heart"></i> Log Donation</button>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const content = document.getElementById('main-content');
+  const body = document.getElementById('page-body');
+  if(content && body) content.innerHTML = body.innerHTML;
+  initNotifications();
+
+  document.getElementById('log-date').value = new Date().toISOString().split('T')[0];
+  document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+  // ── Basic stats ──
+  document.getElementById('dash-blood-type').textContent = user.blood_group || 'N/A';
+  document.getElementById('dash-points').textContent = (user.points||0).toLocaleString();
+  const donations = (DB.get('donations')||[]).filter(d=>d.user_id===user.id);
+  document.getElementById('dash-donations').textContent = donations.length;
+
+  // ── Rank ──
+  const allUsers = (DB.get('users')||[]).sort((a,b)=>b.points-a.points);
+  const rank = allUsers.findIndex(u=>u.id===user.id)+1;
+  document.getElementById('dash-rank').textContent = rank > 0 ? '#'+rank : '#-';
+
+  // ── Streak ──
+  updateStreak();
+  const streak = user.streak || 0;
+  document.getElementById('dash-streak').textContent = streak;
+  document.getElementById('streak-emoji').textContent = streak >= 30 ? '🔥🔥🔥' : streak >= 7 ? '🔥🔥' : streak >= 1 ? '🔥' : '💤';
+  document.getElementById('streak-msg').textContent = streak >= 30 ? 'Legendary! Keep it up!' : streak >= 7 ? 'One week streak!' : streak >= 1 ? 'Keep logging in daily!' : 'Login daily to build streak';
+
+  // ── Countdown ──
+  const bloodDonations = donations.filter(d=>d.type==='blood').sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(bloodDonations.length > 0){
+    const lastDate = new Date(bloodDonations[0].date);
+    const eligible = new Date(lastDate);
+    eligible.setDate(eligible.getDate() + 56);
+    const today = new Date();
+    const diff = Math.ceil((eligible - today) / 86400000);
+    const cdDays = document.getElementById('cd-days');
+    const cdLabel = document.getElementById('cd-label');
+    const cdDate = document.getElementById('cd-date');
+    if(diff <= 0){
+      cdDays.textContent = '✓';
+      cdLabel.textContent = 'Eligible Now!';
+      cdDate.textContent = 'You can donate today!';
+    } else {
+      cdDays.textContent = diff;
+      cdLabel.textContent = diff === 1 ? 'day' : 'days';
+      cdDate.textContent = 'Eligible on ' + eligible.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    }
+  } else {
+    document.getElementById('cd-days').textContent = '✓';
+    document.getElementById('cd-label').textContent = 'Eligible Now!';
+    document.getElementById('cd-date').textContent = 'Log your first donation';
+  }
+
+  // ── Impact ──
+  const bloodUnits = donations.filter(d=>d.type!=='organ').reduce((s,d)=>s+(parseInt(d.units)||1),0);
+  const livesSaved = Math.floor(bloodUnits * 3);
+  const organPledges = donations.filter(d=>d.type==='organ').length;
+  document.getElementById('impact-grid').innerHTML = [
+    {v:bloodUnits, l:'Units Donated', c:'var(--red)', i:'fa-droplet'},
+    {v:livesSaved, l:'Lives Impacted', c:'var(--green)', i:'fa-heart'},
+    {v:organPledges, l:'Organ Pledges', c:'#8B5CF6', i:'fa-ribbon'},
+    {v:(user.points||0), l:'Points Earned', c:'var(--gold)', i:'fa-star'},
+  ].map(s=>`<div class="impact-card"><div class="impact-val" style="color:${s.c};">${s.v}</div><div style="font-size:.65rem;color:var(--muted);margin-top:2px;"><i class="fa-solid ${s.i}"></i> ${s.l}</div></div>`).join('');
+
+  // ── Recent activity ──
+  const allActivity = [];
+  donations.slice(-3).reverse().forEach(d=>allActivity.push({icon:'fa-heart',color:var_red(),text:`Logged ${d.type} donation`,sub:d.location,ts:d.date}));
+  const msgs = (DB.get('messages')||[]).filter(m=>m.from===user.id||m.to===user.id).slice(-2).reverse();
+  msgs.forEach(m=>allActivity.push({icon:'fa-message',color:'#3B82F6',text:m.from===user.id?'You sent a message':'New message received',sub:'',ts:new Date(m.ts).toLocaleDateString()}));
+  const recentEl = document.getElementById('recent-activity');
+  if(allActivity.length === 0){
+    recentEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:.85rem;"><i class="fa-solid fa-clock" style="font-size:2rem;opacity:.2;display:block;margin-bottom:10px;"></i>No activity yet</div>';
+  } else {
+    recentEl.innerHTML = allActivity.slice(0,4).map(a=>`
+      <div class="activity-item">
+        <div style="width:30px;height:30px;border-radius:8px;background:${a.color}20;color:${a.color};display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;"><i class="fa-solid ${a.icon}"></i></div>
+        <div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${a.text}</div><div style="font-size:.72rem;color:var(--muted);">${a.sub||a.ts}</div></div>
+      </div>`).join('');
+  }
+
+  // ── Getting started checklist ──
+  const steps = [
+    {done:!!user.phone, text:'Complete your profile', link:'profile.html', icon:'fa-user'},
+    {done:donations.length>0, text:'Log your first donation', link:'donation_history.html', icon:'fa-heart'},
+    {done:(DB.get('messages')||[]).some(m=>m.from===user.id), text:'Contact a donor', link:'donor_search.html', icon:'fa-message'},
+    {done:user.points>=100, text:'Reach 100 points', link:'leaderboard.html', icon:'fa-star'},
+  ];
+  const incomplete = steps.filter(s=>!s.done);
+  if(incomplete.length > 0 && donations.length < 3){
+    document.getElementById('next-steps-card').style.display='block';
+    document.getElementById('next-steps-list').innerHTML = steps.map(s=>`
+      <div class="step-item" style="opacity:${s.done?.6:1};">
+        <div class="step-icon" style="background:${s.done?'#D1FAE5':'var(--red-light)'};color:${s.done?'var(--green)':'var(--red)'};">
+          <i class="fa-solid ${s.done?'fa-check':s.icon}"></i>
+        </div>
+        <div style="flex:1;font-size:.88rem;font-weight:${s.done?'500':'600'};${s.done?'text-decoration:line-through;color:var(--muted)':''}">${s.text}</div>
+        ${!s.done?`<a href="${s.link}" style="font-size:.78rem;color:var(--red);font-weight:600;text-decoration:none;">Go →</a>`:'<span style="font-size:.75rem;color:var(--green);font-weight:700;">Done ✓</span>'}
+      </div>`).join('');
+  }
+
+  // ── Urgent banner ──
+  const reqs = (DB.get('urgent_requests')||[]).filter(r=>r.active);
+  if(reqs.length > 0){
+    const r = reqs[0];
+    const col = r.urgency==='critical'?'#DC2626':r.urgency==='high'?'#D97706':'#CA8A04';
+    const banner = document.getElementById('urgent-banner');
+    banner.style.display='flex'; banner.style.borderLeftColor=col;
+    document.getElementById('banner-urgency').textContent = r.urgency + ' urgent need';
+    document.getElementById('banner-urgency').style.color = col;
+    document.getElementById('banner-text').innerHTML = `<span style="color:${col};font-size:1.2rem;font-weight:800;">${r.blood_group}</span> needed at ${r.hospital}, ${r.city}`;
+  }
+
+  // ── Blood group in modal ──
+  const bgSel = document.getElementById('log-bg');
+  if(bgSel && user.blood_group) bgSel.value = user.blood_group;
+
+  // ── Chart ──
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const counts=new Array(12).fill(0);
+  donations.forEach(d=>{const m=new Date(d.date).getMonth();if(!isNaN(m))counts[m]++;});
+  new Chart(document.getElementById('donationChart').getContext('2d'),{
+    type:'bar',
+    data:{labels:months,datasets:[{label:'Donations',data:counts,backgroundColor:'rgba(220,38,38,.15)',borderColor:'#DC2626',borderWidth:2,borderRadius:6,borderSkipped:false}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'rgba(200,200,200,.08)'}},x:{grid:{display:false}}}}
+  });
+
+  // Responsive grid
+  if(window.innerWidth < 768) {
+    const mr = document.getElementById('mid-row');
+    if(mr) mr.style.gridTemplateColumns='1fr 1fr';
+  }
+});
+
+function var_red(){ return '#DC2626'; }
+
+function updateStreak(){
+  const today = new Date().toDateString();
+  const yesterday = new Date(Date.now()-86400000).toDateString();
+  const lastLogin = DB.get('last_dashboard_'+user.id);
+  const users = DB.get('users')||[];
+  const u = users.find(x=>x.id===user.id);
+  if(!u) return;
+  if(lastLogin === today) return; // already updated today
+  if(lastLogin === yesterday){ u.streak = (u.streak||0)+1; }
+  else if(!lastLogin){ u.streak = 1; }
+  else { u.streak = 1; } // streak broken
+  DB.set('users',users);
+  DB.set('last_dashboard_'+user.id, today);
+}
+
+function logDonation(){
+  const loc = document.getElementById('log-loc').value.trim();
+  const date = document.getElementById('log-date').value;
+  if(!loc||!date){alert('Location and date are required.');return;}
+  const donations = DB.get('donations')||[];
+  const type = document.getElementById('log-type').value;
+  const bg = document.getElementById('log-bg').value;
+  donations.push({id:Date.now(),user_id:user.id,type,blood_group:bg,location:loc,units:parseInt(document.getElementById('log-units').value)||1,date,notes:document.getElementById('log-notes').value.trim(),organ_donated:document.getElementById('log-organ')?.value.trim()||''});
+  DB.set('donations',donations);
+  addPoints(user.id,500);
+  notifyDonationLogged(user.id, type, bg);
+  const avail=DB.get('blood_avail')||[];
+  const ba=avail.find(a=>a.blood_group===bg);
+  if(ba){ba.units_available=Math.min(ba.units_available+1,ba.units_needed+20);}
+  DB.set('blood_avail',avail);
+  closeModal('log-modal');
+  Notif.showToast('donation_logged','✅ Donation Logged!','You earned +500 points. Thank you!');
+  setTimeout(()=>window.location.reload(), 1200);
+}
+</script>
+</body>
+</html>

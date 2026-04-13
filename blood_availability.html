@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Blood Availability | Red Hope</title>
+<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+<script src="shared.js"></script>
+<script src="notifications.js"></script>
+<script src="layout.js"></script>
+<script>const user = renderLayout('Blood Availability', 'blood_availability.html');</script>
+
+<div id="page-body" style="display:none;">
+  <div class="top-header">
+    <div>
+      <h1><i class="fa-solid fa-droplet" style="color:var(--red);"></i> Blood Availability</h1>
+      <p>Real-time blood stock levels across our network.</p>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <div style="background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.3);color:var(--red);padding:7px 14px;border-radius:20px;font-size:.82rem;font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> <span id="critical-count">0</span> Critical</div>
+      <div style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--green);padding:7px 14px;border-radius:20px;font-size:.82rem;font-weight:600;"><i class="fa-solid fa-circle-check"></i> <span id="adequate-count">0</span> Adequate</div>
+    </div>
+  </div>
+
+  <!-- User's own blood group highlight -->
+  <div id="my-bg-banner" style="display:none;margin-bottom:20px;"></div>
+
+  <div class="blood-grid" id="blood-grid"></div>
+
+  <div class="glass-card" style="margin-top:20px;">
+    <div class="section-title"><i class="fa-solid fa-circle-info" style="color:var(--red);"></i> How Availability is Calculated</div>
+    <p style="color:var(--muted);font-size:.9rem;line-height:1.6;">
+      The percentage shown represents how much of the <strong>target (needed) units</strong> are currently in stock.
+      Below 30% = <strong style="color:#DC2626;">Critical</strong> &nbsp;|&nbsp;
+      Below 70% = <strong style="color:#D97706;">Low</strong> &nbsp;|&nbsp;
+      Below 100% = <strong style="color:#CA8A04;">Moderate</strong> &nbsp;|&nbsp;
+      At or above 100% = <strong style="color:#059669;">Adequate</strong>.
+    </p>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('main-content').innerHTML = document.getElementById('page-body').innerHTML;
+  initNotifications();
+
+  const avail = DB.get('blood_avail') || [];
+  let crit=0, adeq=0;
+  avail.forEach(a => {
+    const r = a.units_available / Math.max(1,a.units_needed);
+    if(r < 0.5) crit++; else adeq++;
+  });
+  document.getElementById('critical-count').textContent = crit;
+  document.getElementById('adequate-count').textContent = adeq;
+
+  // My blood group banner
+  if(user.blood_group) {
+    const my = avail.find(a => a.blood_group === user.blood_group);
+    if(my) {
+      const r = my.units_available / Math.max(1, my.units_needed);
+      const col = r < 0.5 ? '#DC2626' : r < 1 ? '#D97706' : '#059669';
+      const msg = r < 0.5 ? '⚠️ CRITICALLY LOW — your donation is urgently needed!' : r < 1 ? 'Stock is below the needed level' : 'Stock is currently adequate ✓';
+      document.getElementById('my-bg-banner').style.display = 'flex';
+      document.getElementById('my-bg-banner').innerHTML = `
+        <div style="display:flex;align-items:center;gap:16px;background:rgba(220,38,38,.05);border:1px solid rgba(220,38,38,.2);border-left:4px solid ${col};padding:14px 20px;border-radius:12px;flex-wrap:wrap;">
+          <div style="font-size:2.5rem;font-weight:900;font-family:'Playfair Display',serif;color:${col};">${user.blood_group}</div>
+          <div style="flex:1;">
+            <strong>Your blood group (${user.blood_group})</strong> —
+            <span style="color:${col};font-weight:600;">${msg}</span>
+            <div style="font-size:.82rem;color:var(--muted);margin-top:3px;">${my.units_available} units available / ${my.units_needed} units needed</div>
+          </div>
+          ${r<1?`<a href="donation_history.html" style="background:var(--red);color:white;text-decoration:none;padding:9px 16px;border-radius:8px;font-weight:600;font-size:.88rem;">Log a Donation</a>`:''}
+        </div>`;
+    }
+  }
+
+  const grid = document.getElementById('blood-grid');
+  grid.innerHTML = avail.map(a => {
+    const ratio = a.units_available / Math.max(1, a.units_needed);
+    const pct = Math.min(100, Math.round(ratio * 100));
+    let bg, color, label;
+    if(pct<30){bg='rgba(220,38,38,.1)';color='#DC2626';label='🔴 CRITICAL';}
+    else if(pct<70){bg='rgba(217,119,6,.1)';color='#D97706';label='🟠 LOW';}
+    else if(pct<100){bg='rgba(202,138,4,.1)';color='#CA8A04';label='🟡 MODERATE';}
+    else{bg='rgba(16,185,129,.1)';color='#059669';label='🟢 ADEQUATE';}
+    const isMine = user.blood_group === a.blood_group;
+    return `
+      <div class="blood-card" style="background:${bg};border-top:4px solid ${color};border:1px solid ${color}30;border-top:4px solid ${color};${isMine?`box-shadow:0 0 0 2px ${color}40;`:''}">
+        ${isMine?`<div style="font-size:.7rem;background:${color}20;color:${color};padding:3px 8px;border-radius:12px;display:inline-block;margin-bottom:8px;font-weight:700;">YOURS</div>`:''}
+        <div class="blood-type" style="color:${color};">${a.blood_group}</div>
+        <div class="tag" style="background:${color}20;color:${color};margin:8px 0;">${label}</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${color};"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted);margin-bottom:8px;">
+          <span>${a.units_available} available</span><span>${a.units_needed} needed</span>
+        </div>
+        <div style="font-size:1.5rem;font-weight:800;color:${color};">${pct}%</div>
+        <div style="font-size:.72rem;color:var(--muted);">of target met</div>
+      </div>`;
+  }).join('');
+});
+</script>
+</body>
+</html>
