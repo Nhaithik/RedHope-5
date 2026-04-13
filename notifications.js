@@ -1,7 +1,18 @@
 // ════════════════════════════════════════
 // RED HOPE — Notification System
 // ════════════════════════════════════════
-
+function sendEmailNotification(message, toEmail) {
+  emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", {
+    to_email: toEmail,
+    message: message
+  })
+  .then(function() {
+    console.log("✅ Email sent to " + toEmail);
+  })
+  .catch(function(err) {
+    console.log("❌ Email failed", err);
+  });
+}
 const Notif = {
 
   // ── Types ──────────────────────────────
