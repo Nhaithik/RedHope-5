@@ -1,4 +1,5 @@
- const osScript = document.createElement("script");
+// 🔔 OneSignal Setup
+const osScript = document.createElement("script");
 osScript.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
 osScript.defer = true;
 document.head.appendChild(osScript);
@@ -10,13 +11,15 @@ OneSignalDeferred.push(async function(OneSignal) {
     notifyButton: { enable: true }
   });
 });
-// Load EmailJS
-const script = document.createElement("script");
-script.src = "https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js";
-document.head.appendChild(script);
 
-script.onload = () => {
-  emailjs.init("Edxk_LUJ1D-p4MVLO");
+
+// 📧 EmailJS Setup
+const emailScript = document.createElement("script");
+emailScript.src = "https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js";
+document.head.appendChild(emailScript);
+
+emailScript.onload = () => {
+  emailjs.init("Edxk_LUJ1D-p4MVLO"); // ✅ your public key
 };
 // Renders sidebar + topbar into the page
 function renderLayout(pageTitle, activePage) {
