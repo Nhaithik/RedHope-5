@@ -1,12 +1,15 @@
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "fcf7eb23-08a2-42d7-b412-06b16087a6ee",
-    });
+ const osScript = document.createElement("script");
+osScript.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
+osScript.defer = true;
+document.head.appendChild(osScript);
+
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(async function(OneSignal) {
+  await OneSignal.init({
+    appId: "fc7eb23-08a2-42d7-b412-06b16087a6ee",
+    notifyButton: { enable: true }
   });
-</script>
+});
 // Load EmailJS
 const script = document.createElement("script");
 script.src = "https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js";
