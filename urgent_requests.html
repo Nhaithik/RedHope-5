@@ -228,6 +228,13 @@ Please help if you can 🙏`
       });
     }
   }, 1000);
+  if (window.OneSignal) {
+  OneSignal.sendSelfNotification(
+    "🚨 Urgent Blood Request",
+    `Blood needed: ${newReq.blood_group} at ${newReq.hospital}, ${newReq.city}`,
+    window.location.href
+  );
+}
 }
 
 function resolveReq(id){
