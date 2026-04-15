@@ -66,7 +66,9 @@ let msgToId = null;
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('main-content').innerHTML = document.getElementById('page-body').innerHTML;
   initNotifications();
+setTimeout(() => {
   loadRequests();
+}, 100);
   document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 });
 
@@ -159,30 +161,72 @@ function loadRequests(){
   }).join('');
 }
 function submitRequest(){
-// Delay email so it doesn’t break UI
-setTimeout(() => {
-  if (typeof emailjs !== "undefined") {
-    const users = DB.get('users') || [];
+  const hospital = document.getElementById('req-hospital').value.trim();
+  const city = document.getElementById('req-city').value.trim();
 
-    users.forEach(u => {
-      if(u.email){
-        emailjs.send("service_te6r54b", "template_xzukcuk", {
-          to_email: u.email,
-          message: `🚨 Urgent Blood Request!
+  if(!hospital || !city){
+    alert('Hospital and city are required.');
+    return;
+  }
 
-Blood Group: ${document.getElementById('req-bg').value}
-Hospital: ${hospital}
-City: ${city}
+  const reqs = DB.get('urgent_requests') || [];
+  const nid = DB.get('next_rid') || 100;
+
+  const newReq = {
+    id: nid,
+    user_id: user.id,
+    blood_group: document.getElementById('req-bg').value,
+    hospital,
+    city,
+    urgency: document.getElementById('req-urgency').value,
+    description: document.getElementById('req-desc').value.trim(),
+    active: true,
+    created: Date.now()
+  };
+
+  reqs.push(newReq);
+
+  DB.set('urgent_requests', reqs);
+  DB.set('next_rid', nid + 1);
+
+  // ✅ Website notification
+  notifyNewUrgentRequest(newReq);
+
+  // ✅ Refresh UI
+  loadRequests();
+
+  // ✅ Close modal
+  closeModal('new-req-modal');
+
+  // ✅ Reset fields
+  document.getElementById('req-hospital').value = '';
+  document.getElementById('req-city').value = '';
+  document.getElementById('req-desc').value = '';
+
+  // ✅ EMAIL (SAFE - AFTER EVERYTHING)
+  setTimeout(() => {
+    if (typeof emailjs !== "undefined") {
+      const users = DB.get('users') || [];
+
+      users.forEach(u => {
+        if(u.email){
+          emailjs.send("service_te6r54b", "template_xzukcuk", {
+            to_email: u.email,
+            message: `🚨 Urgent Blood Request!
+
+Blood Group: ${newReq.blood_group}
+Hospital: ${newReq.hospital}
+City: ${newReq.city}
 
 Please help if you can 🙏`
-        })
-        .then(() => console.log("✅ Email sent to " + u.email))
-        .catch(err => console.log("❌ Email failed", err));
-      }
-    });
-  }
-}, 1000); // 1 second delay
-    
+          })
+          .then(() => console.log("✅ Email sent to " + u.email))
+          .catch(err => console.log("❌ Email failed", err));
+        }
+      });
+    }
+  }, 1000);
+}
 
 function resolveReq(id){
   if(!confirm('Mark this request as resolved?'))return;
