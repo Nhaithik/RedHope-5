@@ -208,23 +208,24 @@ setTimeout(() => {
   // ✅ EMAIL (SAFE - AFTER EVERYTHING)
 setTimeout(() => {
   if (typeof emailjs !== "undefined") {
+
     const users = DB.get('users') || [];
 
     users.forEach(u => {
-      if(u.email){
+      if (u.email) {
+
         emailjs.send("service_te6r54b", "template_xzukcuk", {
           to_email: u.email,
-
-          // ✅ Dynamic variables for template
           blood_group: newReq.blood_group,
           hospital: newReq.hospital,
           city: newReq.city
-
         })
         .then(() => console.log("✅ Email sent to " + u.email))
         .catch(err => console.log("❌ Email failed", err));
+
       }
     });
+
   }
 }, 1000);
   if (window.OneSignal) {
