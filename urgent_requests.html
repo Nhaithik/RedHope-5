@@ -71,37 +71,93 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function loadRequests(){
-  const reqs = (DB.get('urgent_requests')||[]).filter(r=>r.active);
+  const reqs = (DB.get('urgent_requests') || []).filter(r => r.active);
+
   const grid = document.getElementById('req-grid');
-  if(!grid) return;
-  if(!reqs.length){
-    grid.innerHTML='<div class="glass-card" style="text-align:center;padding:50px;"><i class="fa-solid fa-heart-pulse" style="font-size:3rem;color:var(--red);opacity:.3;"></i><p style="margin-top:14px;color:var(--muted);">No active urgent requests. The community is safe! 🎉</p></div>';
+
+  // ✅ IMPORTANT FIX (if grid not ready)
+  if(!grid){
+    setTimeout(loadRequests, 100);
     return;
   }
-  const urgColors={critical:'#DC2626',high:'#D97706',moderate:'#CA8A04'};
-  const users = DB.get('users')||[];
-  grid.innerHTML = reqs.map(r=>{
-    const col = urgColors[r.urgency]||'#888';
-    const poster = users.find(u=>u.id===r.user_id);
+
+  if(!reqs.length){
+    grid.innerHTML = `
+      <div class="glass-card" style="text-align:center;padding:50px;">
+        <i class="fa-solid fa-heart-pulse" style="font-size:3rem;color:var(--red);opacity:.3;"></i>
+        <p style="margin-top:14px;color:var(--muted);">
+          No active urgent requests.
+        </p>
+      </div>`;
+    return;
+  }
+
+  const urgencyColors = {
+    critical:'#DC2626',
+    high:'#D97706',
+    moderate:'#CA8A04'
+  };
+
+  const users = DB.get('users') || [];
+
+  grid.innerHTML = reqs.map(r => {
+
+    const col = urgencyColors[r.urgency] || '#888';
+
+    const poster = users.find(u => u.id === r.user_id);
     const name = poster ? poster.email.split('@')[0] : 'Someone';
-    const ago = Math.floor((Date.now()-r.created)/3600000);
-    const timeStr = ago<1?'Just now':ago<24?ago+'h ago':Math.floor(ago/24)+'d ago';
-    return `<div class="req-card" style="border-left:4px solid ${col};">
-      <div style="position:absolute;top:15px;right:15px;background:${col}20;color:${col};padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;border:1px solid ${col}50;text-transform:uppercase;">${r.urgency}</div>
-      <div style="font-size:2.5rem;font-weight:900;font-family:'Playfair Display',serif;color:${col};line-height:1;margin-bottom:4px;">${r.blood_group}</div>
-      <div style="font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Blood Needed</div>
-      <div style="font-size:.9rem;margin-bottom:5px;"><i class="fa-solid fa-hospital" style="color:var(--red);width:18px;"></i> ${r.hospital}</div>
-      <div style="font-size:.9rem;margin-bottom:5px;"><i class="fa-solid fa-location-dot" style="color:var(--red);width:18px;"></i> ${r.city}</div>
-      <div style="font-size:.82rem;color:var(--muted);margin-bottom:12px;"><i class="fa-solid fa-user" style="width:18px;"></i> ${name} · ${timeStr}</div>
-      ${r.description?`<p style="font-size:.82rem;color:#777;font-style:italic;border-top:1px solid #FEE2E2;padding-top:10px;margin-bottom:12px;">"${r.description}"</p>`:''}
-      <div style="display:flex;gap:10px;">
-        <button class="btn-sm" style="flex:1;background:var(--red);color:white;" onclick="openMsgModal(${r.user_id},'${name}')"><i class="fa-solid fa-message"></i> I Can Help</button>
-        ${r.user_id===user.id?`<button class="btn-sm btn-outline" onclick="resolveReq(${r.id})"><i class="fa-solid fa-check"></i> Resolved</button>`:''}
+
+    const ago = Math.floor((Date.now() - r.created) / 60000);
+    const timeStr = ago < 1 ? 'Just now' :
+                    ago < 24*60 ? `${ago} min ago` :
+                    `${Math.floor(ago/24/60)} days ago`;
+
+    return `
+    <div class="req-card" style="border-left:4px solid ${col}; padding:16px; margin-bottom:12px; border-radius:12px; background:white;">
+      
+      <div style="position:absolute;top:10px;right:10px;
+        background:${col}20;color:${col};
+        padding:4px 10px;border-radius:20px;font-size:.7rem;">
+        ${r.urgency}
       </div>
+
+      <div style="font-size:1.8rem;font-weight:900;color:${col};">
+        ${r.blood_group}
+      </div>
+
+      <div style="color:var(--muted);margin:8px 0;">
+        🏥 ${r.hospital}
+      </div>
+
+      <div style="color:var(--muted);margin-bottom:8px;">
+        📍 ${r.city}
+      </div>
+
+      <div style="font-size:.8rem;color:gray;">
+        👤 ${name} • ${timeStr}
+      </div>
+
+      ${r.description ? `
+        <p style="font-size:.85rem;color:#555;margin-top:8px;">
+          ${r.description}
+        </p>` : ''}
+
+      <div style="margin-top:10px;display:flex;gap:10px;">
+        <button onclick="openMsgModal(${r.user_id}, '${name}')"
+          style="background:var(--red);color:white;padding:6px 12px;border:none;border-radius:6px;">
+          I Can Help
+        </button>
+
+        ${r.user_id === user.id ? `
+          <button onclick="resolveReq(${r.id})"
+            style="padding:6px 12px;border-radius:6px;">
+            Resolved
+          </button>` : ''}
+      </div>
+
     </div>`;
   }).join('');
 }
-  
 function submitRequest(){
 // Delay email so it doesn’t break UI
 setTimeout(() => {
