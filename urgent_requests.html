@@ -193,7 +193,9 @@ function submitRequest(){
   notifyNewUrgentRequest(newReq);
 
   // ✅ Refresh UI
+setTimeout(() => {
   loadRequests();
+}, 100);
 
   // ✅ Close modal
   closeModal('new-req-modal');
