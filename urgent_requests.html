@@ -103,42 +103,6 @@ function loadRequests(){
 }
   
 function submitRequest(){
-  const hospital = document.getElementById('req-hospital').value.trim();
-  const city = document.getElementById('req-city').value.trim();
-
-  if(!hospital || !city){
-    alert('Hospital and city are required.');
-    return;
-  }
-
-  const reqs = DB.get('urgent_requests') || [];
-  const nid = (DB.get('next_rid') || 100);
-
-  reqs.push({
-    id: nid,
-    user_id: user.id,
-    blood_group: document.getElementById('req-bg').value,
-    hospital,
-    city,
-    urgency: document.getElementById('req-urgency').value,
-    description: document.getElementById('req-desc').value.trim(),
-    active: true,
-    created: Date.now()
-  });
-
-  DB.set('urgent_requests', reqs);
-  DB.set('next_rid', nid + 1);
-
-  // Website notification
-  notifyNewUrgentRequest({
-    urgency: document.getElementById('req-urgency').value,
-    blood_group: document.getElementById('req-bg').value,
-    hospital,
-    city,
-    user_id: user.id
-  });
-
-  // ✅ EMAIL TO ALL USERS
 // Delay email so it doesn’t break UI
 setTimeout(() => {
   if (typeof emailjs !== "undefined") {
@@ -162,14 +126,7 @@ Please help if you can 🙏`
     });
   }
 }, 1000); // 1 second delay
-  // Reset form
-  document.getElementById('req-hospital').value='';
-  document.getElementById('req-city').value='';
-  document.getElementById('req-desc').value='';
-
-  closeModal('new-req-modal');
-  loadRequests();
-}
+    
 
 function resolveReq(id){
   if(!confirm('Mark this request as resolved?'))return;
