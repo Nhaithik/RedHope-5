@@ -4,586 +4,46 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Donation Tracker | Red Hope</title>
+  <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <script src="layout.js" defer></script>
-  <style>
-    :root {
-      --red: #e53935;
-      --red-dark: #b71c1c;
-      --red-light: #ffebee;
-      --red-mid: #ef9a9a;
-      --green: #2e7d32;
-      --green-light: #e8f5e9;
-      --amber: #f57c00;
-      --amber-light: #fff3e0;
-      --blue: #1565c0;
-      --blue-light: #e3f2fd;
-      --gray: #757575;
-      --gray-light: #f5f5f5;
-      --gray-border: #e0e0e0;
-      --text: #212121;
-      --text-secondary: #616161;
-      --white: #ffffff;
-      --radius: 12px;
-      --radius-sm: 8px;
-      --shadow: 0 2px 8px rgba(0,0,0,0.08);
-      --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: #fafafa;
-      color: var(--text);
-      min-height: 100vh;
-    }
-
-    /* ── NAV (matches RedHope layout) ── */
-    .navbar {
-      background: var(--white);
-      border-bottom: 1px solid var(--gray-border);
-      padding: 0 24px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 60px;
-    }
-    .nav-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      color: var(--red);
-      font-weight: 700;
-      font-size: 20px;
-    }
-    .nav-brand i { font-size: 22px; }
-    .nav-links {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .nav-links a {
-      text-decoration: none;
-      color: var(--text-secondary);
-      font-size: 13px;
-      font-weight: 500;
-      padding: 6px 10px;
-      border-radius: 6px;
-      transition: all 0.15s;
-      white-space: nowrap;
-    }
-    .nav-links a:hover { background: var(--gray-light); color: var(--text); }
-    .nav-links a.active { background: var(--red-light); color: var(--red); }
-    .nav-right { display: flex; align-items: center; gap: 10px; }
-    .btn-logout {
-      background: none;
-      border: 1px solid var(--gray-border);
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 13px;
-      cursor: pointer;
-      color: var(--text-secondary);
-      transition: all 0.15s;
-    }
-    .btn-logout:hover { border-color: var(--red); color: var(--red); }
-
-    /* ── PAGE LAYOUT ── */
-    .page-wrapper {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 28px 20px 60px;
-    }
-
-    .page-header {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 28px;
-    }
-    .page-header-icon {
-      width: 48px;
-      height: 48px;
-      background: var(--red-light);
-      border-radius: var(--radius);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--red);
-      font-size: 22px;
-    }
-    .page-header h1 { font-size: 22px; font-weight: 700; color: var(--text); }
-    .page-header p { font-size: 14px; color: var(--text-secondary); margin-top: 2px; }
-
-    /* ── TABS ── */
-    .tabs {
-      display: flex;
-      gap: 0;
-      background: var(--white);
-      border: 1px solid var(--gray-border);
-      border-radius: var(--radius);
-      padding: 5px;
-      margin-bottom: 24px;
-      overflow-x: auto;
-    }
-    .tab-btn {
-      flex: 1;
-      padding: 10px 16px;
-      font-size: 14px;
-      font-weight: 500;
-      border: none;
-      background: transparent;
-      color: var(--text-secondary);
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: all 0.15s;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-    }
-    .tab-btn:hover { background: var(--gray-light); color: var(--text); }
-    .tab-btn.active { background: var(--red); color: white; }
-    .tab-btn i { font-size: 15px; }
-
-    /* ── SECTION ── */
-    .section { display: none; }
-    .section.active { display: block; }
-
-    /* ── CARDS ── */
-    .card {
-      background: var(--white);
-      border: 1px solid var(--gray-border);
-      border-radius: var(--radius);
-      padding: 20px 22px;
-      margin-bottom: 18px;
-      box-shadow: var(--shadow);
-    }
-    .card-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .card-title i { color: var(--red); font-size: 16px; }
-
-    /* ── METRIC GRID ── */
-    .metric-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    .metric {
-      background: var(--gray-light);
-      border-radius: var(--radius-sm);
-      padding: 14px 16px;
-      text-align: center;
-    }
-    .metric-label { font-size: 11px; color: var(--text-secondary); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-    .metric-value { font-size: 22px; font-weight: 700; color: var(--text); }
-    .metric-value.green { color: var(--green); }
-    .metric-value.red { color: var(--red); }
-    .metric-value.amber { color: var(--amber); }
-    .metric-value.small { font-size: 15px; padding-top: 4px; }
-
-    /* ── BADGES ── */
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 9px;
-      border-radius: 20px;
-    }
-    .badge-green { background: var(--green-light); color: var(--green); }
-    .badge-red { background: var(--red-light); color: var(--red); }
-    .badge-amber { background: var(--amber-light); color: var(--amber); }
-    .badge-blue { background: var(--blue-light); color: var(--blue); }
-    .badge-gray { background: var(--gray-light); color: var(--gray); }
-
-    /* ── PROGRESS ── */
-    .progress-wrap { margin-bottom: 16px; }
-    .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .progress-header span { font-size: 13px; color: var(--text-secondary); }
-    .progress-header strong { font-size: 14px; font-weight: 600; }
-    .progress-bar {
-      height: 10px;
-      background: var(--gray-light);
-      border-radius: 5px;
-      overflow: hidden;
-      margin-bottom: 6px;
-    }
-    .progress-fill {
-      height: 100%;
-      border-radius: 5px;
-      transition: width 0.6s ease;
-    }
-    .progress-dates { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); }
-
-    /* ── TIMELINE ── */
-    .timeline { padding-left: 20px; position: relative; }
-    .timeline::before { content: ''; position: absolute; left: 7px; top: 6px; bottom: 6px; width: 2px; background: var(--gray-border); border-radius: 1px; }
-    .tl-item { position: relative; padding-bottom: 20px; }
-    .tl-item:last-child { padding-bottom: 0; }
-    .tl-dot {
-      position: absolute;
-      left: -17px;
-      top: 4px;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--gray-border);
-      border: 2px solid var(--white);
-      box-shadow: 0 0 0 2px var(--gray-border);
-    }
-    .tl-dot.done { background: var(--green); box-shadow: 0 0 0 2px var(--green-light); }
-    .tl-dot.next { background: var(--red); box-shadow: 0 0 0 3px var(--red-light); }
-    .tl-dot.future { background: var(--gray-light); box-shadow: 0 0 0 2px var(--gray-border); }
-    .tl-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
-    .tl-date { font-size: 12px; color: var(--text-secondary); }
-
-    /* ── FORM ELEMENTS ── */
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
-    @media (max-width: 520px) { .form-row { grid-template-columns: 1fr; } }
-    .form-group { display: flex; flex-direction: column; gap: 5px; }
-    .form-group label { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.4px; }
-    .form-group select,
-    .form-group input[type=date],
-    .form-group input[type=time],
-    .form-group input[type=text],
-    .form-group input[type=number] {
-      padding: 10px 12px;
-      font-size: 14px;
-      border: 1px solid var(--gray-border);
-      border-radius: var(--radius-sm);
-      background: var(--white);
-      color: var(--text);
-      transition: border 0.15s;
-      outline: none;
-      width: 100%;
-    }
-    .form-group select:focus,
-    .form-group input:focus { border-color: var(--red); }
-
-    /* ── BUTTONS ── */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 10px 18px;
-      font-size: 14px;
-      font-weight: 500;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--gray-border);
-      cursor: pointer;
-      transition: all 0.15s;
-      background: var(--white);
-      color: var(--text);
-      text-decoration: none;
-    }
-    .btn:hover { background: var(--gray-light); }
-    .btn-primary { background: var(--red); color: white; border-color: var(--red); }
-    .btn-primary:hover { background: var(--red-dark); border-color: var(--red-dark); }
-    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
-
-    /* ── BLOOD BANK FINDER ── */
-    .search-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-    .search-row input[type=text] {
-      flex: 1;
-      min-width: 180px;
-      padding: 10px 14px;
-      font-size: 14px;
-      border: 1px solid var(--gray-border);
-      border-radius: var(--radius-sm);
-      outline: none;
-      transition: border 0.15s;
-    }
-    .search-row input:focus { border-color: var(--red); }
-
-    .map-container {
-      background: #e8f4f8;
-      border-radius: var(--radius);
-      height: 240px;
-      margin-bottom: 16px;
-      position: relative;
-      overflow: hidden;
-      border: 1px solid var(--gray-border);
-    }
-    .map-grid-bg {
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
-      background-size: 36px 36px;
-    }
-    .map-roads {
-      position: absolute;
-      inset: 0;
-    }
-    .map-road-h {
-      position: absolute;
-      height: 3px;
-      background: rgba(255,255,255,0.7);
-      border-radius: 1px;
-    }
-    .map-road-v {
-      position: absolute;
-      width: 3px;
-      background: rgba(255,255,255,0.7);
-      border-radius: 1px;
-    }
-    .map-you-dot {
-      position: absolute;
-      width: 14px;
-      height: 14px;
-      background: var(--blue);
-      border-radius: 50%;
-      border: 2px solid white;
-      box-shadow: 0 0 0 5px rgba(21,101,192,0.2);
-      transform: translate(-50%, -50%);
-      z-index: 2;
-    }
-    .map-you-dot::after {
-      content: '';
-      position: absolute;
-      inset: -8px;
-      border-radius: 50%;
-      border: 1.5px solid rgba(21,101,192,0.3);
-      animation: pulse-ring 2s infinite;
-    }
-    @keyframes pulse-ring { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } }
-    .map-pin {
-      position: absolute;
-      transform: translate(-50%, -100%);
-      z-index: 2;
-      cursor: pointer;
-    }
-    .map-pin i { font-size: 24px; color: var(--red); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25)); }
-    .map-pin.camp i { color: var(--amber); }
-    .map-pin.hospital i { color: var(--blue); }
-    .map-empty {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      color: var(--text-secondary);
-    }
-    .map-empty i { font-size: 36px; color: var(--gray); }
-    .map-legend {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      background: rgba(255,255,255,0.9);
-      border-radius: 6px;
-      padding: 6px 10px;
-      font-size: 11px;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      border: 1px solid var(--gray-border);
-    }
-    .legend-item { display: flex; align-items: center; gap: 5px; color: var(--text-secondary); }
-    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-
-    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-    .filter-btn {
-      padding: 6px 14px;
-      font-size: 13px;
-      font-weight: 500;
-      border: 1px solid var(--gray-border);
-      border-radius: 20px;
-      background: var(--white);
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: all 0.15s;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .filter-btn:hover { border-color: var(--red); color: var(--red); }
-    .filter-btn.active { background: var(--red); color: white; border-color: var(--red); }
-
-    .bank-list { display: flex; flex-direction: column; }
-    .bank-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-      padding: 14px 0;
-      border-bottom: 1px solid var(--gray-border);
-    }
-    .bank-item:last-child { border-bottom: none; padding-bottom: 0; }
-    .bank-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: var(--radius-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      flex-shrink: 0;
-    }
-    .bank-icon.bank { background: var(--red-light); color: var(--red); }
-    .bank-icon.camp { background: var(--amber-light); color: var(--amber); }
-    .bank-icon.hospital { background: var(--blue-light); color: var(--blue); }
-    .bank-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
-    .bank-address { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
-    .bank-tags { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-    .bank-hours { font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; }
-    .no-results { text-align: center; padding: 24px; color: var(--text-secondary); font-size: 14px; }
-    .no-results i { font-size: 28px; display: block; margin-bottom: 8px; color: var(--gray); }
-    #search-feedback { font-size: 13px; color: var(--text-secondary); margin-top: 6px; min-height: 18px; }
-
-    /* ── REMINDERS ── */
-    .reminder-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 0;
-      border-bottom: 1px solid var(--gray-border);
-      gap: 16px;
-    }
-    .reminder-row:last-child { border-bottom: none; }
-    .reminder-info { flex: 1; min-width: 0; }
-    .reminder-name { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
-    .reminder-desc { font-size: 12px; color: var(--text-secondary); }
-    .toggle {
-      width: 42px;
-      height: 24px;
-      background: var(--gray-border);
-      border-radius: 12px;
-      position: relative;
-      cursor: pointer;
-      transition: background 0.2s;
-      flex-shrink: 0;
-      border: none;
-      outline: none;
-    }
-    .toggle.on { background: var(--green); }
-    .toggle::after {
-      content: '';
-      position: absolute;
-      width: 16px;
-      height: 16px;
-      background: white;
-      border-radius: 50%;
-      top: 4px;
-      left: 4px;
-      transition: left 0.2s;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    }
-    .toggle.on::after { left: 22px; }
-
-    .scheduled-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--gray-border);
-      gap: 12px;
-    }
-    .scheduled-item:last-child { border-bottom: none; }
-    .scheduled-info { flex: 1; }
-    .scheduled-note { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
-    .scheduled-when { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; }
-    .btn-delete {
-      width: 32px;
-      height: 32px;
-      border-radius: 6px;
-      border: 1px solid var(--gray-border);
-      background: white;
-      color: var(--text-secondary);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.15s;
-      flex-shrink: 0;
-    }
-    .btn-delete:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 600px) {
-      .navbar { padding: 0 14px; }
-      .nav-links { display: none; }
-      .page-wrapper { padding: 18px 14px 50px; }
-      .metric-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-  </style>
 </head>
 <body>
+<script src="shared.js"></script>
+<script src="notifications.js"></script>
+<script src="layout.js"></script>
+<script>const user = renderLayout('Donation Tracker', 'donation_tracker.html');</script>
 
-<!-- NAVBAR -->
-<nav class="navbar">
-  <a class="nav-brand" href="index.html">
-    <i class="fa-solid fa-heart-pulse"></i> Red Hope
-  </a>
-  <div class="nav-links">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="blood_availability.html">Availability</a>
-    <a href="donor_search.html">Find Donors</a>
-    <a href="urgent_requests.html">Urgent</a>
-    <a href="donation_history.html">History</a>
-    <a href="donation_tracker.html" class="active">Tracker</a>
-    <a href="leaderboard.html">Leaderboard</a>
-    <a href="map_view.html">Map</a>
-    <a href="chatbot.html">AI Assistant</a>
-  </div>
-  <div class="nav-right">
-    <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
-  </div>
-</nav>
+<div id="page-body" style="display:none;">
 
-<!-- PAGE -->
-<div class="page-wrapper">
-
-  <!-- Header -->
-  <div class="page-header">
-    <div class="page-header-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
-    <div>
-      <h1>Donation Tracker</h1>
-      <p>Track eligibility, find blood banks, and set donation reminders</p>
-    </div>
-  </div>
-
-  <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('tracker')">
+  <!-- ═══════════════════════════════════════
+       TOP SECTION — TABS
+  ════════════════════════════════════════ -->
+  
+  <div style="display:flex; gap:16px; margin-bottom:24px; flex-wrap:wrap;">
+    <button class="tab-tracker" onclick="switchTab('tracker')" style="padding:10px 18px; border:1px solid #FEE2E2; background:white; border-radius:10px; cursor:pointer; font-weight:600; font-size:.9rem; color:var(--text); transition:all .2s;" id="tab-tracker-btn">
       <i class="fa-regular fa-clock"></i> Eligibility Tracker
     </button>
-    <button class="tab-btn" onclick="switchTab('banks')">
+    <button class="tab-tracker" onclick="switchTab('banks')" style="padding:10px 18px; border:1px solid #FEE2E2; background:white; border-radius:10px; cursor:pointer; font-weight:600; font-size:.9rem; color:var(--text); transition:all .2s;" id="tab-banks-btn">
       <i class="fa-solid fa-map-pin"></i> Blood Bank Finder
     </button>
-    <button class="tab-btn" onclick="switchTab('reminders')">
-      <i class="fa-regular fa-bell"></i> Reminders
+    <button class="tab-tracker" onclick="switchTab('reminders')" style="padding:10px 18px; border:1px solid #FEE2E2; background:white; border-radius:10px; cursor:pointer; font-weight:600; font-size:.9rem; color:var(--text); transition:all .2s;" id="tab-reminders-btn">
+      <i class="fa-regular fa-bell"></i> Reminders & Preferences
     </button>
   </div>
 
   <!-- ═══════════════════════════════════════
-       TAB 1 — ELIGIBILITY TRACKER
+       TAB 1: ELIGIBILITY TRACKER
   ════════════════════════════════════════ -->
-  <div id="tab-tracker" class="section active">
-
-    <div class="card">
-      <div class="card-title"><i class="fa-solid fa-droplet"></i> When did you last donate?</div>
-      <div class="form-row">
+  
+  <div id="section-tracker" class="tracker-section" style="display:block;">
+    
+    <!-- When did you last donate? -->
+    <div class="glass-card">
+      <div class="section-title"><i class="fa-solid fa-droplet"></i> When did you last donate?</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
         <div class="form-group">
-          <label>Donation type</label>
-          <select id="donationType" onchange="recalculate()">
+          <label>Donation Type</label>
+          <select id="donationType" onchange="recalculate()" style="padding:12px 14px; border:1.5px solid var(--border); border-radius:10px; background:white; font-family:'DM Sans',sans-serif; font-size:.9rem;">
             <option value="56">Whole blood — every 56 days</option>
             <option value="7">Platelets — every 7 days</option>
             <option value="28">Plasma — every 28 days</option>
@@ -592,199 +52,254 @@
         </div>
         <div class="form-group">
           <label>Last donation date</label>
-          <input type="date" id="lastDate" onchange="recalculate()" />
+          <input type="date" id="lastDate" onchange="recalculate()" style="padding:12px 14px; border:1.5px solid var(--border); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:.9rem;" />
         </div>
       </div>
-      <div class="btn-group">
-        <button class="btn btn-primary" onclick="logToday()">
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn-primary" onclick="logToday()" style="padding:11px 20px; background:linear-gradient(135deg,var(--red),var(--red-dark)); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600; font-size:.9rem; transition:all .2s;">
           <i class="fa-solid fa-plus"></i> Log today as donation
         </button>
-        <button class="btn" onclick="clearTracker()">
+        <button class="btn-outline" onclick="clearTracker()" style="padding:11px 20px; background:white; border:1.5px solid var(--border); border-radius:10px; cursor:pointer; font-weight:600; font-size:.9rem; color:var(--text); transition:all .2s;">
           <i class="fa-solid fa-rotate-left"></i> Clear
         </button>
       </div>
     </div>
 
-    <!-- Metrics -->
-    <div class="metric-grid">
-      <div class="metric">
-        <div class="metric-label">Days since</div>
-        <div class="metric-value" id="m-since">—</div>
+    <!-- Metrics Grid -->
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="lbl">Days since</div>
+        <div class="val" id="m-since">—</div>
       </div>
-      <div class="metric">
-        <div class="metric-label">Days until eligible</div>
-        <div class="metric-value" id="m-left">—</div>
+      <div class="stat-card">
+        <div class="lbl">Days until eligible</div>
+        <div class="val" id="m-left">—</div>
       </div>
-      <div class="metric">
-        <div class="metric-label">Eligible on</div>
-        <div class="metric-value small" id="m-date">—</div>
+      <div class="stat-card">
+        <div class="lbl">Eligible on</div>
+        <div class="val" id="m-date" style="font-size:1.2rem;">—</div>
       </div>
-      <div class="metric">
-        <div class="metric-label">Status</div>
-        <div id="m-status" style="margin-top:4px">—</div>
+      <div class="stat-card">
+        <div class="lbl">Status</div>
+        <div id="m-status" style="margin-top:8px;">—</div>
       </div>
     </div>
 
-    <!-- Progress -->
-    <div class="card" id="progressCard" style="display:none">
-      <div class="card-title"><i class="fa-solid fa-chart-line"></i> Recovery progress</div>
-      <div class="progress-wrap">
-        <div class="progress-header">
-          <span>Body recovery toward next donation</span>
-          <strong id="pct-label">0%</strong>
+    <!-- Progress Card -->
+    <div class="glass-card" id="progressCard" style="display:none;">
+      <div class="section-title"><i class="fa-solid fa-chart-line"></i> Recovery progress</div>
+      <div style="margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-size:.9rem; color:var(--text);">Body recovery toward next donation</span>
+          <strong id="pct-label" style="font-weight:700;">0%</strong>
         </div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="pct-fill" style="width:0%"></div>
+        <div class="bar-bg">
+          <div class="bar-fill" id="pct-fill" style="width:0%; background:var(--red);"></div>
         </div>
-        <div class="progress-dates">
+        <div style="display:flex; justify-content:space-between; font-size:.8rem; color:var(--muted);">
           <span id="pct-start">—</span>
           <span id="pct-end">—</span>
         </div>
       </div>
-      <div id="eligibility-tip" style="font-size:13px;color:var(--text-secondary);padding:10px 14px;background:var(--gray-light);border-radius:var(--radius-sm)"></div>
+      <div id="eligibility-tip" style="font-size:.88rem; color:var(--text); padding:12px 14px; background:var(--red-light); border-radius:10px; border-left:3px solid var(--red);"></div>
     </div>
 
     <!-- Timeline -->
-    <div class="card">
-      <div class="card-title"><i class="fa-solid fa-timeline"></i> Donation timeline</div>
+    <div class="glass-card">
+      <div class="section-title"><i class="fa-solid fa-timeline"></i> Donation timeline</div>
       <div class="timeline" id="timeline">
         <div class="tl-item">
           <div class="tl-dot future"></div>
-          <div class="tl-title" style="color:var(--text-secondary);font-weight:400">Enter your last donation date above to see your timeline</div>
+          <div style="color:var(--muted); font-size:.9rem;">Enter your last donation date above to see your timeline</div>
         </div>
       </div>
     </div>
 
-  </div><!-- /tab-tracker -->
+  </div><!-- /tracker section -->
 
   <!-- ═══════════════════════════════════════
-       TAB 2 — BLOOD BANK FINDER
+       TAB 2: BLOOD BANK FINDER
   ════════════════════════════════════════ -->
-  <div id="tab-banks" class="section">
-
-    <div class="card">
-      <div class="card-title"><i class="fa-solid fa-magnifying-glass-location"></i> Find nearby blood banks</div>
-      <div class="search-row">
-        <input type="text" id="cityInput" placeholder="Enter city (e.g. Hyderabad, Mumbai, Delhi…)" onkeydown="if(event.key==='Enter')searchBanks()" />
-        <button class="btn btn-primary" onclick="searchBanks()"><i class="fa-solid fa-search"></i> Search</button>
-        <button class="btn" onclick="useMyLocation()"><i class="fa-solid fa-location-dot"></i> My location</button>
+  
+  <div id="section-banks" class="tracker-section" style="display:none;">
+    
+    <!-- Search Card -->
+    <div class="glass-card">
+      <div class="section-title"><i class="fa-solid fa-magnifying-glass-location"></i> Find nearby blood banks</div>
+      <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+        <input type="text" id="cityInput" placeholder="Enter city (e.g. Hyderabad, Mumbai, Delhi…)" 
+          onkeydown="if(event.key==='Enter')searchBanks()" 
+          style="flex:1; min-width:180px; padding:12px 14px; border:1.5px solid var(--border); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:.9rem;" />
+        <button class="btn-primary" onclick="searchBanks()" style="padding:12px 20px; background:linear-gradient(135deg,var(--red),var(--red-dark)); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600; font-size:.9rem;">
+          <i class="fa-solid fa-search"></i> Search
+        </button>
+        <button class="btn-outline" onclick="useMyLocation()" style="padding:12px 20px; background:white; border:1.5px solid var(--border); border-radius:10px; cursor:pointer; font-weight:600; font-size:.9rem; color:var(--text);">
+          <i class="fa-solid fa-location-dot"></i> My location
+        </button>
       </div>
-      <div id="search-feedback"></div>
+      <div id="search-feedback" style="font-size:.88rem; color:var(--text-secondary); min-height:20px;"></div>
     </div>
 
-    <!-- Map -->
-    <div class="map-container" id="mapContainer">
-      <div class="map-grid-bg"></div>
-      <div class="map-empty" id="mapEmpty">
-        <i class="fa-regular fa-map"></i>
-        <span>Search a city to see blood banks on the map</span>
+    <!-- Map Container -->
+    <div id="mapContainer" style="background:#e8f4f8; border-radius:16px; height:280px; margin-bottom:20px; position:relative; overflow:hidden; border:1px solid #FECACA;">
+      <div style="position:absolute; inset:0; background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px); background-size:40px 40px;"></div>
+      <div id="mapEmpty" style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:var(--text-secondary);">
+        <i class="fa-regular fa-map" style="font-size:32px; color:var(--muted);"></i>
+        <span style="font-size:.9rem;">Search a city to see blood banks on the map</span>
       </div>
     </div>
 
     <!-- Filters -->
-    <div class="filter-row">
-      <button class="filter-btn active" onclick="filterBanks('all',this)"><i class="fa-solid fa-list"></i> All</button>
-      <button class="filter-btn" onclick="filterBanks('bank',this)"><i class="fa-solid fa-building-columns"></i> Blood banks</button>
-      <button class="filter-btn" onclick="filterBanks('camp',this)"><i class="fa-solid fa-calendar-check"></i> Donation camps</button>
-      <button class="filter-btn" onclick="filterBanks('hospital',this)"><i class="fa-solid fa-hospital"></i> Hospitals</button>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;">
+      <button class="filter-btn active" onclick="filterBanks('all',this)" style="padding:8px 16px; border:1px solid var(--border); background:var(--red); color:white; border-radius:20px; cursor:pointer; font-size:.85rem; font-weight:600; transition:all .2s;">
+        <i class="fa-solid fa-list"></i> All
+      </button>
+      <button class="filter-btn" onclick="filterBanks('bank',this)" style="padding:8px 16px; border:1px solid var(--border); background:white; color:var(--text-secondary); border-radius:20px; cursor:pointer; font-size:.85rem; font-weight:600; transition:all .2s;">
+        <i class="fa-solid fa-building-columns"></i> Blood banks
+      </button>
+      <button class="filter-btn" onclick="filterBanks('camp',this)" style="padding:8px 16px; border:1px solid var(--border); background:white; color:var(--text-secondary); border-radius:20px; cursor:pointer; font-size:.85rem; font-weight:600; transition:all .2s;">
+        <i class="fa-solid fa-calendar-check"></i> Donation camps
+      </button>
+      <button class="filter-btn" onclick="filterBanks('hospital',this)" style="padding:8px 16px; border:1px solid var(--border); background:white; color:var(--text-secondary); border-radius:20px; cursor:pointer; font-size:.85rem; font-weight:600; transition:all .2s;">
+        <i class="fa-solid fa-hospital"></i> Hospitals
+      </button>
     </div>
 
-    <!-- Results -->
-    <div class="card" id="banksCard" style="display:none">
-      <div class="card-title" style="justify-content:space-between">
-        <span><i class="fa-solid fa-hospital-user"></i> <span id="banks-title">Results</span></span>
-        <span class="badge badge-blue" id="banks-count"></span>
+    <!-- Results Card -->
+    <div class="glass-card" id="banksCard" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+        <div class="section-title" style="margin:0;">
+          <i class="fa-solid fa-hospital-user"></i> <span id="banks-title">Results</span>
+        </div>
+        <span class="tag" style="background:var(--blue-light); color:var(--blue);" id="banks-count"></span>
       </div>
-      <div class="bank-list" id="bankItems"></div>
+      <div id="bankItems"></div>
     </div>
 
-  </div><!-- /tab-banks -->
+  </div><!-- /banks section -->
 
   <!-- ═══════════════════════════════════════
-       TAB 3 — REMINDERS
+       TAB 3: REMINDERS & PREFERENCES
   ════════════════════════════════════════ -->
-  <div id="tab-reminders" class="section">
-
-    <div class="card">
-      <div class="card-title"><i class="fa-solid fa-bell"></i> Notification preferences</div>
+  
+  <div id="section-reminders" class="tracker-section" style="display:none;">
+    
+    <!-- Notification Preferences -->
+    <div class="glass-card">
+      <div class="section-title"><i class="fa-solid fa-bell"></i> Notification preferences</div>
       <div id="pref-list">
-        <div class="reminder-row">
-          <div class="reminder-info">
-            <div class="reminder-name">Eligibility reminder</div>
-            <div class="reminder-desc">Get notified the day you become eligible to donate again</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid #FEE2E2; gap:12px;">
+          <div style="flex:1;">
+            <div style="font-size:.9rem; font-weight:600; color:var(--text);">Eligibility reminder</div>
+            <div style="font-size:.8rem; color:var(--muted); margin-top:2px;">Get notified the day you become eligible to donate again</div>
           </div>
-          <button class="toggle on" onclick="this.classList.toggle('on')" aria-label="Toggle"></button>
+          <button class="toggle on" onclick="this.classList.toggle('on')" style="width:42px; height:24px; background:var(--green); border:none; border-radius:12px; position:relative; cursor:pointer; flex-shrink:0; transition:background .2s;" aria-label="Toggle">
+            <span style="position:absolute; width:16px; height:16px; background:white; border-radius:50%; top:4px; left:22px; transition:left .2s;"></span>
+          </button>
         </div>
-        <div class="reminder-row">
-          <div class="reminder-info">
-            <div class="reminder-name">Urgent blood request alerts</div>
-            <div class="reminder-desc">Critical requests matching your blood type in your city</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid #FEE2E2; gap:12px;">
+          <div style="flex:1;">
+            <div style="font-size:.9rem; font-weight:600; color:var(--text);">Urgent blood request alerts</div>
+            <div style="font-size:.8rem; color:var(--muted); margin-top:2px;">Critical requests matching your blood type in your city</div>
           </div>
-          <button class="toggle on" onclick="this.classList.toggle('on')" aria-label="Toggle"></button>
+          <button class="toggle on" onclick="this.classList.toggle('on')" style="width:42px; height:24px; background:var(--green); border:none; border-radius:12px; position:relative; cursor:pointer; flex-shrink:0; transition:background .2s;" aria-label="Toggle">
+            <span style="position:absolute; width:16px; height:16px; background:white; border-radius:50%; top:4px; left:22px; transition:left .2s;"></span>
+          </button>
         </div>
-        <div class="reminder-row">
-          <div class="reminder-info">
-            <div class="reminder-name">Nearby donation camp alerts</div>
-            <div class="reminder-desc">Camps posted within 10 km of your location</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid #FEE2E2; gap:12px;">
+          <div style="flex:1;">
+            <div style="font-size:.9rem; font-weight:600; color:var(--text);">Nearby donation camp alerts</div>
+            <div style="font-size:.8rem; color:var(--muted); margin-top:2px;">Camps posted within 10 km of your location</div>
           </div>
-          <button class="toggle on" onclick="this.classList.toggle('on')" aria-label="Toggle"></button>
+          <button class="toggle on" onclick="this.classList.toggle('on')" style="width:42px; height:24px; background:var(--green); border:none; border-radius:12px; position:relative; cursor:pointer; flex-shrink:0; transition:background .2s;" aria-label="Toggle">
+            <span style="position:absolute; width:16px; height:16px; background:white; border-radius:50%; top:4px; left:22px; transition:left .2s;"></span>
+          </button>
         </div>
-        <div class="reminder-row">
-          <div class="reminder-info">
-            <div class="reminder-name">Monthly impact summary</div>
-            <div class="reminder-desc">Your donation report and lives saved estimate every 30 days</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid #FEE2E2; gap:12px;">
+          <div style="flex:1;">
+            <div style="font-size:.9rem; font-weight:600; color:var(--text);">Monthly impact summary</div>
+            <div style="font-size:.8rem; color:var(--muted); margin-top:2px;">Your donation report and lives saved estimate every 30 days</div>
           </div>
-          <button class="toggle" onclick="this.classList.toggle('on')" aria-label="Toggle"></button>
+          <button class="toggle" onclick="this.classList.toggle('on')" style="width:42px; height:24px; background:#E5E7EB; border:none; border-radius:12px; position:relative; cursor:pointer; flex-shrink:0; transition:background .2s;" aria-label="Toggle">
+            <span style="position:absolute; width:16px; height:16px; background:white; border-radius:50%; top:4px; left:4px; transition:left .2s;"></span>
+          </button>
         </div>
-        <div class="reminder-row">
-          <div class="reminder-info">
-            <div class="reminder-name">Streak at-risk alert</div>
-            <div class="reminder-desc">Alert when your donation streak is about to break</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 0; gap:12px;">
+          <div style="flex:1;">
+            <div style="font-size:.9rem; font-weight:600; color:var(--text);">Streak at-risk alert</div>
+            <div style="font-size:.8rem; color:var(--muted); margin-top:2px;">Alert when your donation streak is about to break</div>
           </div>
-          <button class="toggle on" onclick="this.classList.toggle('on')" aria-label="Toggle"></button>
+          <button class="toggle on" onclick="this.classList.toggle('on')" style="width:42px; height:24px; background:var(--green); border:none; border-radius:12px; position:relative; cursor:pointer; flex-shrink:0; transition:background .2s;" aria-label="Toggle">
+            <span style="position:absolute; width:16px; height:16px; background:white; border-radius:50%; top:4px; left:22px; transition:left .2s;"></span>
+          </button>
         </div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-title"><i class="fa-regular fa-calendar-plus"></i> Schedule a custom reminder</div>
-      <div class="form-row">
+    <!-- Schedule Custom Reminder -->
+    <div class="glass-card">
+      <div class="section-title"><i class="fa-regular fa-calendar-plus"></i> Schedule a custom reminder</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:14px;">
         <div class="form-group">
           <label>Date</label>
-          <input type="date" id="rem-date" />
+          <input type="date" id="rem-date" style="padding:12px 14px; border:1.5px solid var(--border); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:.9rem;" />
         </div>
         <div class="form-group">
           <label>Time</label>
-          <input type="time" id="rem-time" value="09:00" />
+          <input type="time" id="rem-time" value="09:00" style="padding:12px 14px; border:1.5px solid var(--border); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:.9rem;" />
         </div>
       </div>
-      <div class="form-group" style="margin-bottom:14px">
+      <div class="form-group" style="margin-bottom:16px;">
         <label>Note</label>
-        <input type="text" id="rem-note" placeholder="e.g. Book slot at Apollo Blood Bank" />
+        <input type="text" id="rem-note" placeholder="e.g. Book slot at Apollo Blood Bank" style="padding:12px 14px; border:1.5px solid var(--border); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:.9rem; width:100%;" />
       </div>
-      <button class="btn btn-primary" onclick="addReminder()"><i class="fa-solid fa-bell-plus"></i> Schedule reminder</button>
+      <button class="btn-primary" onclick="addReminder()" style="padding:11px 20px; background:linear-gradient(135deg,var(--red),var(--red-dark)); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600; font-size:.9rem;">
+        <i class="fa-solid fa-bell-plus"></i> Schedule reminder
+      </button>
     </div>
 
-    <div class="card" id="scheduled-card" style="display:none">
-      <div class="card-title"><i class="fa-regular fa-calendar-check"></i> Scheduled reminders</div>
+    <!-- Scheduled Reminders -->
+    <div class="glass-card" id="scheduled-card" style="display:none;">
+      <div class="section-title"><i class="fa-regular fa-calendar-check"></i> Scheduled reminders</div>
       <div id="scheduled-list"></div>
     </div>
 
-  </div><!-- /tab-reminders -->
+  </div><!-- /reminders section -->
 
-</div><!-- /page-wrapper -->
+</div><!-- /page-body -->
 
 <script>
-/* ─── TABS ─── */
+document.addEventListener('DOMContentLoaded', () => {
+  const content = document.getElementById('main-content');
+  const body = document.getElementById('page-body');
+  if(content && body) content.innerHTML = body.innerHTML;
+  initNotifications();
+
+  // Restore tracker state
+  const d = localStorage.getItem('rh_lastDate');
+  const t = localStorage.getItem('rh_donationType');
+  if (d) {
+    document.getElementById('lastDate').value = d;
+    if (t) document.getElementById('donationType').value = t;
+    recalculate();
+  }
+  document.getElementById('lastDate').max = new Date().toISOString().split('T')[0];
+});
+
+/* ─── TAB SWITCHING ─── */
 function switchTab(id) {
-  document.querySelectorAll('.tab-btn').forEach((b, i) => {
-    b.classList.toggle('active', ['tracker','banks','reminders'][i] === id);
-  });
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.getElementById('tab-' + id).classList.add('active');
+  const tabs = {tracker:'section-tracker', banks:'section-banks', reminders:'section-reminders'};
+  const btns = {tracker:'tab-tracker-btn', banks:'tab-banks-btn', reminders:'tab-reminders-btn'};
+  
+  Object.values(tabs).forEach(sid => document.getElementById(sid).style.display = 'none');
+  document.getElementById(tabs[id]).style.display = 'block';
+  
+  document.querySelectorAll('[id*="tab-"][id$="-btn"]').forEach(btn => btn.style.background = 'white');
+  document.getElementById(btns[id]).style.background = 'var(--red)';
+  document.getElementById(btns[id]).style.color = 'white';
 }
 
-/* ─── TRACKER ─── */
+/* ─── TRACKER FUNCTIONS ─── */
 function recalculate() {
   const dateVal = document.getElementById('lastDate').value;
   const interval = parseInt(document.getElementById('donationType').value);
@@ -803,22 +318,22 @@ function recalculate() {
 
   document.getElementById('m-since').textContent = daysSince + 'd';
   document.getElementById('m-left').textContent = isEligible ? 'Now!' : daysLeft + 'd';
-  document.getElementById('m-left').className = 'metric-value ' + (isEligible ? 'green' : daysLeft <= 7 ? 'amber' : 'red');
+  document.getElementById('m-left').style.color = isEligible ? 'var(--green)' : daysLeft <= 7 ? '#F59E0B' : 'var(--red)';
   document.getElementById('m-date').textContent = fmt(eligible);
 
   const statusEl = document.getElementById('m-status');
   statusEl.innerHTML = isEligible
-    ? '<span class="badge badge-green"><i class="fa-solid fa-circle-check"></i> Eligible now</span>'
+    ? '<span class="tag" style="background:var(--green);color:white;"><i class="fa-solid fa-circle-check"></i> Eligible now</span>'
     : daysLeft <= 7
-    ? '<span class="badge badge-amber"><i class="fa-solid fa-clock"></i> Almost there</span>'
-    : '<span class="badge badge-red"><i class="fa-solid fa-hourglass-half"></i> Not yet</span>';
+    ? '<span class="tag" style="background:#FEF3C7;color:#92400E;"><i class="fa-solid fa-clock"></i> Almost there</span>'
+    : '<span class="tag" style="background:var(--red-light);color:var(--red);"><i class="fa-solid fa-hourglass-half"></i> Not yet</span>';
 
   // Progress
   document.getElementById('progressCard').style.display = 'block';
   document.getElementById('pct-label').textContent = pct + '%';
   const fill = document.getElementById('pct-fill');
   fill.style.width = pct + '%';
-  fill.style.background = pct >= 100 ? '#2e7d32' : pct >= 70 ? '#f57c00' : '#e53935';
+  fill.style.background = pct >= 100 ? '#10B981' : pct >= 70 ? '#F59E0B' : 'var(--red)';
   document.getElementById('pct-start').textContent = fmt(last);
   document.getElementById('pct-end').textContent = fmt(eligible);
 
@@ -842,7 +357,7 @@ function recalculate() {
       <div class="tl-dot ${isEligible ? 'done' : 'next'}"></div>
       <div class="tl-title">
         Next eligible date
-        ${isEligible ? '<span class="badge badge-green" style="margin-left:8px"><i class="fa-solid fa-circle-check"></i> Today!</span>' : ''}
+        ${isEligible ? '<span class="tag" style="margin-left:8px;background:var(--green);color:white;"><i class="fa-solid fa-circle-check"></i> Today!</span>' : ''}
       </div>
       <div class="tl-date">${fmtFull(eligible)}</div>
     </div>
@@ -874,21 +389,9 @@ function clearTracker() {
   document.getElementById('m-left').textContent = '—';
   document.getElementById('m-date').textContent = '—';
   document.getElementById('m-status').innerHTML = '—';
-  document.getElementById('timeline').innerHTML = `<div class="tl-item"><div class="tl-dot future"></div><div class="tl-title" style="color:var(--text-secondary);font-weight:400">Enter your last donation date above to see your timeline</div></div>`;
+  document.getElementById('timeline').innerHTML = `<div class="tl-item"><div class="tl-dot future"></div><div style="color:var(--muted);font-size:.9rem;">Enter your last donation date above to see your timeline</div></div>`;
   localStorage.removeItem('rh_lastDate');
 }
-
-// Restore on load
-(function() {
-  const d = localStorage.getItem('rh_lastDate');
-  const t = localStorage.getItem('rh_donationType');
-  if (d) {
-    document.getElementById('lastDate').value = d;
-    if (t) document.getElementById('donationType').value = t;
-    recalculate();
-  }
-  document.getElementById('lastDate').max = new Date().toISOString().split('T')[0];
-})();
 
 /* ─── BLOOD BANK DATA ─── */
 const BANK_DATA = {
@@ -949,7 +452,10 @@ function searchBanks() {
     renderBanks(allBanks, key.charAt(0).toUpperCase() + key.slice(1));
     fb.textContent = '';
     activeFilter = 'all';
-    document.querySelectorAll('.filter-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+    document.querySelectorAll('.filter-btn').forEach((b,i) => {
+      b.style.background = i===0 ? 'var(--red)' : 'white';
+      b.style.color = i===0 ? 'white' : 'var(--text-secondary)';
+    });
   } else {
     fb.textContent = '❌ No results for "' + city + '". Try: Hyderabad, Mumbai, Delhi, Bangalore, Chennai, Pune.';
     document.getElementById('banksCard').style.display = 'none';
@@ -968,7 +474,10 @@ function useMyLocation() {
     renderMap(allBanks);
     renderBanks(allBanks, 'Hyderabad');
     activeFilter = 'all';
-    document.querySelectorAll('.filter-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+    document.querySelectorAll('.filter-btn').forEach((b,i) => {
+      b.style.background = i===0 ? 'var(--red)' : 'white';
+      b.style.color = i===0 ? 'white' : 'var(--text-secondary)';
+    });
   }, () => {
     fb.textContent = '⚠️ Could not get location. Please type your city manually.';
   });
@@ -976,134 +485,120 @@ function useMyLocation() {
 
 function renderMap(banks) {
   const c = document.getElementById('mapContainer');
-  c.innerHTML = '<div class="map-grid-bg"></div>';
+  c.innerHTML = '<div style="position:absolute;inset:0;background-image:linear-gradient(rgba(0,0,0,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.05) 1px,transparent 1px);background-size:40px 40px;"></div>';
 
-  // Roads
   [20,45,70].forEach(pct => {
-    const h = document.createElement('div'); h.className = 'map-road-h';
-    h.style.cssText = `top:${pct}%;left:0;right:0`;
+    const h = document.createElement('div');
+    h.style.cssText = `position:absolute;top:${pct}%;left:0;right:0;height:3px;background:rgba(255,255,255,0.7);border-radius:1px;`;
     c.appendChild(h);
-    const v = document.createElement('div'); v.className = 'map-road-v';
-    v.style.cssText = `left:${pct}%;top:0;bottom:0`;
+    const v = document.createElement('div');
+    v.style.cssText = `position:absolute;left:${pct}%;top:0;bottom:0;width:3px;background:rgba(255,255,255,0.7);border-radius:1px;`;
     c.appendChild(v);
   });
 
-  // You dot
   const you = document.createElement('div');
-  you.className = 'map-you-dot';
-  you.style.cssText = 'left:50%;top:50%';
+  you.style.cssText = 'position:absolute;left:50%;top:50%;width:14px;height:14px;background:var(--blue);border-radius:50%;border:2px solid white;box-shadow:0 0 0 5px rgba(59,130,246,0.2);transform:translate(-50%,-50%);z-index:2;';
   you.title = 'You are here';
   c.appendChild(you);
 
-  // Pins
   banks.forEach(b => {
     const pin = document.createElement('div');
-    pin.className = 'map-pin ' + b.type;
-    pin.style.cssText = `left:${b.pin[0]}%;top:${b.pin[1]}%`;
+    pin.style.cssText = `position:absolute;left:${b.pin[0]}%;top:${b.pin[1]}%;transform:translate(-50%,-100%);z-index:2;cursor:pointer;`;
+    pin.innerHTML = `<i class="fa-solid fa-location-dot" style="font-size:24px;color:${b.type==='camp'?'#F59E0B':b.type==='hospital'?'var(--blue)':'var(--red)'}; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25));"></i>`;
     pin.title = b.name;
-    pin.innerHTML = '<i class="fa-solid fa-location-dot"></i>';
     c.appendChild(pin);
   });
-
-  // Legend
-  const leg = document.createElement('div');
-  leg.className = 'map-legend';
-  leg.innerHTML = `
-    <div class="legend-item"><div class="legend-dot" style="background:#1565c0"></div> You</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#e53935"></div> Blood bank</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#f57c00"></div> Camp</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#1565c0"></div> Hospital</div>`;
-  c.appendChild(leg);
 }
 
 function resetMap() {
-  const c = document.getElementById('mapContainer');
-  c.innerHTML = '<div class="map-grid-bg"></div><div class="map-empty" id="mapEmpty"><i class="fa-regular fa-map"></i><span>Search a city to see blood banks on the map</span></div>';
+  document.getElementById('mapContainer').innerHTML = `
+    <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(0,0,0,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,0.05) 1px,transparent 1px);background-size:40px 40px;"></div>
+    <div id="mapEmpty" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--text-secondary);">
+      <i class="fa-regular fa-map" style="font-size:32px;color:var(--muted);"></i>
+      <span style="font-size:.9rem;">Search a city to see blood banks on the map</span>
+    </div>`;
 }
 
 function renderBanks(banks, city) {
-  document.getElementById('banks-title').textContent = 'Near ' + city;
+  const card = document.getElementById('banksCard');
+  card.style.display = 'block';
+  document.getElementById('banks-title').textContent = `Results in ${city}`;
   document.getElementById('banks-count').textContent = banks.length + ' found';
-  const iconMap = { bank: 'fa-building-columns', camp: 'fa-calendar-check', hospital: 'fa-hospital' };
-  document.getElementById('bankItems').innerHTML = banks.length
-    ? banks.map(b => {
-        const sc = b.stock === 'Good' ? 'badge-green' : b.stock === 'Low' ? 'badge-amber' : b.stock === 'Critical' ? 'badge-red' : 'badge-blue';
-        return `<div class="bank-item">
-          <div class="bank-icon ${b.type}"><i class="fa-solid ${iconMap[b.type]}"></i></div>
-          <div style="flex:1;min-width:0">
-            <div class="bank-name">${b.name}</div>
-            <div class="bank-address"><i class="fa-solid fa-location-dot" style="font-size:11px;margin-right:3px"></i>${b.address}</div>
-            <div class="bank-tags">
-              <span class="badge badge-gray"><i class="fa-solid fa-route"></i> ${b.dist}</span>
-              <span class="badge ${sc}">Stock: ${b.stock}</span>
-              <span class="bank-hours"><i class="fa-regular fa-clock"></i> ${b.open}</span>
-            </div>
-          </div>
-        </div>`;
-      }).join('')
-    : '<div class="no-results"><i class="fa-solid fa-circle-xmark"></i>No results for this filter.</div>';
-  document.getElementById('banksCard').style.display = 'block';
+
+  let filtered = activeFilter === 'all' ? banks : banks.filter(b => b.type === activeFilter);
+  const html = filtered.map(b => `
+    <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid #FEE2E2;">
+      <div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:${b.type==='camp'?'#FEF3E0':b.type==='hospital'?'#E3F2FD':'#FEE2E2'};color:${b.type==='camp'?'#F59E0B':b.type==='hospital'?'var(--blue)':'var(--red)'};">
+        <i class="fa-solid ${b.type==='camp'?'fa-calendar-check':b.type==='hospital'?'fa-hospital':'fa-droplet'}"></i>
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:3px;">${b.name}</div>
+        <div style="font-size:.8rem;color:var(--text-secondary);margin-bottom:6px;">${b.address}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <span class="tag" style="background:var(--red-light);color:var(--red);font-size:.75rem;padding:3px 10px;border-radius:20px;">${b.dist}</span>
+          <span style="font-size:.75rem;color:var(--text-secondary);display:flex;align-items:center;gap:4px;"><i class="fa-solid fa-clock"></i> ${b.open}</span>
+          <span class="tag" style="background:${b.stock==='Good'?'#D1FAE5':b.stock==='Low'?'#FEF3E0':'#FEE2E2'};color:${b.stock==='Good'?'#10B981':b.stock==='Low'?'#F59E0B':'#DC2626'};font-size:.75rem;padding:3px 10px;border-radius:20px;">${b.stock}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  
+  document.getElementById('bankItems').innerHTML = html || '<div style="text-align:center;padding:24px;color:var(--text-secondary);font-size:.9rem;"><i class="fa-solid fa-search" style="font-size:28px;display:block;margin-bottom:8px;color:var(--muted);"></i> No results for this filter.</div>';
 }
 
 function filterBanks(type, btn) {
   activeFilter = type;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  if (!allBanks.length) return;
-  const filtered = type === 'all' ? allBanks : allBanks.filter(b => b.type === type);
-  renderBanks(filtered, document.getElementById('cityInput').value);
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.style.background = 'white';
+    b.style.color = 'var(--text-secondary)';
+  });
+  btn.style.background = 'var(--red)';
+  btn.style.color = 'white';
+  
+  if(allBanks.length > 0) {
+    const city = document.getElementById('cityInput').value;
+    renderBanks(allBanks, city.charAt(0).toUpperCase() + city.slice(1));
+  }
 }
-
-/* ─── REMINDERS ─── */
-let reminders = JSON.parse(localStorage.getItem('rh_reminders') || '[]');
 
 function addReminder() {
   const date = document.getElementById('rem-date').value;
   const time = document.getElementById('rem-time').value;
-  const note = document.getElementById('rem-note').value.trim() || 'Donation reminder';
-  if (!date) { alert('Please select a date for your reminder.'); return; }
-  reminders.push({ id: Date.now(), date, time, note });
+  const note = document.getElementById('rem-note').value.trim();
+  if(!date||!time||!note) { alert('All fields required.'); return; }
+  
+  const reminders = JSON.parse(localStorage.getItem('rh_reminders') || '[]');
+  reminders.push({id:Date.now(),date,time,note});
   localStorage.setItem('rh_reminders', JSON.stringify(reminders));
-  renderReminders();
+  
   document.getElementById('rem-date').value = '';
   document.getElementById('rem-note').value = '';
+  document.getElementById('scheduled-card').style.display = 'block';
+  renderScheduled();
+}
+
+function renderScheduled() {
+  const reminders = JSON.parse(localStorage.getItem('rh_reminders') || '[]');
+  const list = document.getElementById('scheduled-list');
+  list.innerHTML = reminders.map(r => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #FEE2E2;gap:12px;">
+      <div style="flex:1;">
+        <div style="font-size:.9rem;font-weight:500;color:var(--text);margin-bottom:2px;">${r.note}</div>
+        <div style="font-size:.8rem;color:var(--text-secondary);display:flex;align-items:center;gap:4px;"><i class="fa-solid fa-calendar"></i> ${r.date} at ${r.time}</div>
+      </div>
+      <button onclick="deleteReminder(${r.id})" style="width:32px;height:32px;border-radius:6px;border:1px solid #FEE2E2;background:white;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;">
+        <i class="fa-solid fa-trash-can"></i>
+      </button>
+    </div>
+  `).join('');
 }
 
 function deleteReminder(id) {
-  reminders = reminders.filter(r => r.id !== id);
-  localStorage.setItem('rh_reminders', JSON.stringify(reminders));
-  renderReminders();
-}
-
-function renderReminders() {
-  const card = document.getElementById('scheduled-card');
-  const list = document.getElementById('scheduled-list');
-  if (!reminders.length) { card.style.display = 'none'; return; }
-  card.style.display = 'block';
-  list.innerHTML = reminders.map(r => {
-    const d = new Date(r.date + 'T' + r.time);
-    const fmt = d.toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
-    return `<div class="scheduled-item">
-      <div class="scheduled-info">
-        <div class="scheduled-note">${r.note}</div>
-        <div class="scheduled-when"><i class="fa-regular fa-calendar"></i> ${fmt} at ${r.time}</div>
-      </div>
-      <button class="btn-delete" onclick="deleteReminder(${r.id})" title="Delete reminder">
-        <i class="fa-solid fa-trash" style="font-size:13px"></i>
-      </button>
-    </div>`;
-  }).join('');
-}
-
-renderReminders();
-
-const todayStr = new Date().toISOString().split('T')[0];
-document.getElementById('rem-date').min = todayStr;
-
-function logout() {
-  localStorage.removeItem('rh_user');
-  window.location.href = 'login.html';
+  const reminders = JSON.parse(localStorage.getItem('rh_reminders') || '[]');
+  localStorage.setItem('rh_reminders', JSON.stringify(reminders.filter(r => r.id !== id)));
+  renderScheduled();
 }
 </script>
+
 </body>
 </html>
