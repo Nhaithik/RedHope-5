@@ -21,6 +21,7 @@ document.head.appendChild(emailScript);
 emailScript.onload = () => {
   emailjs.init("Edxk_LUJ1D-p4MVLO"); // ✅ your public key
 };
+
 // Renders sidebar + topbar into the page
 function renderLayout(pageTitle, activePage) {
   const user = requireAuth();
@@ -32,6 +33,7 @@ function renderLayout(pageTitle, activePage) {
     { href:'donor_search.html',       icon:'fa-magnifying-glass',    label:'Find Donors' },
     { href:'urgent_requests.html',    icon:'fa-triangle-exclamation',label:'Urgent Requests' },
     { href:'donation_history.html',   icon:'fa-timeline',            label:'Donation History' },
+    { href:'donation_tracker.html',   icon:'fa-clock-rotate-left',   label:'Donation Tracker' },
     { href:'leaderboard.html',        icon:'fa-trophy',              label:'Leaderboard' },
     { href:'messages.html',           icon:'fa-comments',            label:'Messages' },
     { href:'map_view.html',           icon:'fa-map-location-dot',    label:'Donation Map' },
@@ -44,7 +46,7 @@ function renderLayout(pageTitle, activePage) {
   const navHTML = nav.map(n => `
     <a href="${n.href}" class="nav-item ${n.href === activePage ? 'active' : ''}">
       <i class="fa-solid ${n.icon}"></i> ${n.label}
-      ${n.href === 'notifications.html' ? '<span id="nav-notif-badge" style="margin-left:auto;background:var(--red);color:white;font-size:.65rem;font-weight:800;min-width:16px;height:16px;border-radius:50%;display:none;align-items:center;justify-content:center;padding:0 3px;"></span>' : ''}
+      ${n.href === 'notifications.html' ? '<span id="nav-notif-badge" style="margin-left:auto;background:var(--red);color:white;font-size:.65rem;font-weight:800;min-width:16px;height:16px;border-radius:50%;display:none;align-items:center;justify-content:center;"></span>' : ''}
     </a>`).join('');
 
   const name = user.email.split('@')[0];
@@ -66,7 +68,9 @@ function renderLayout(pageTitle, activePage) {
       <div class="main-area">
         <div class="topbar">
           <div style="display:flex;align-items:center;gap:14px;">
-            <button id="mob-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')" style="display:none;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text);"><i class="fa-solid fa-bars"></i></button>
+            <button id="mob-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')" style="display:none;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text);">
+              <i class="fa-solid fa-bars"></i>
+            </button>
             <h2>${pageTitle}</h2>
           </div>
           <div class="topbar-right">
